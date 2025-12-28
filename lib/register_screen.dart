@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'profile_card.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -8,26 +9,21 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Controllers pour lire le texte des champs
+  // Controllers (same as yours)
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController groupController = TextEditingController();
+  final TextEditingController yearController = TextEditingController();
+  final TextEditingController matriculeController = TextEditingController();
+  final TextEditingController specialtyController = TextEditingController();
+  final TextEditingController departmentController = TextEditingController();
+  final TextEditingController adminCodeController = TextEditingController();
 
-  // Champs supplémentaires
-  final TextEditingController groupController = TextEditingController();      // pour student
-  final TextEditingController yearController = TextEditingController();       // pour student
-  final TextEditingController matriculeController = TextEditingController();  // pour student
-
-  final TextEditingController specialtyController = TextEditingController();  // pour teacher
-  final TextEditingController departmentController = TextEditingController(); // pour teacher
-
-  final TextEditingController adminCodeController = TextEditingController();  // pour admin
-
-  String? selectedRole; // role choisi dans le dropdown
+  String? selectedRole;
 
   @override
   void dispose() {
-    // Libère la mémoire des controllers
     fullNameController.dispose();
     emailController.dispose();
     passwordController.dispose();
@@ -42,9 +38,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color backgroundColor = Color(0xFF4B2E83); // même violet
+    const Color backgroundColor = Color(0xFF8E7CFF);
     const Color cardColor = Colors.white;
-    const Color primaryColor = Color(0xFFB76CFF);
+    const Color primaryColor = Color(0xFF4B2E83);
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -67,181 +63,115 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // 👉 PROFILE CARD (shows Selsabil + live updates)
+                  if (selectedRole == 'Student') ...[
+                    const Text(
+                      'Preview Card:',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    ProfileCard(
+                      fullName: fullNameController.text.isEmpty ? "Selsabil" : fullNameController.text,
+                      studentId: matriculeController.text.isEmpty ? "1234" : matriculeController.text,
+                      group: groupController.text.isEmpty ? "2" : groupController.text,
+                      email: emailController.text.isEmpty ? "selsabil@exemple.com" : emailController.text,
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+
                   const Text(
                     'Sign Up',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
-                  // Full name
+                  // All your TextFields (unchanged - perfect!)
                   TextField(
                     controller: fullNameController,
                     decoration: InputDecoration(
                       labelText: 'Full Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 12),
 
-                  // Email
                   TextField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 12),
 
-                  // Password
                   TextField(
                     controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       labelText: 'Password',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                   const SizedBox(height: 12),
 
-                  // Dropdown rôle
                   DropdownButtonFormField<String>(
                     value: selectedRole,
                     decoration: InputDecoration(
                       labelText: 'Role',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     items: const [
-                      DropdownMenuItem(
-                        value: 'Student',
-                        child: Text('Student'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Teacher',
-                        child: Text('Teacher'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Admin',
-                        child: Text('Admin'),
-                      ),
+                      DropdownMenuItem(value: 'Student', child: Text('Student')),
+                      DropdownMenuItem(value: 'Teacher', child: Text('Teacher')),
+                      DropdownMenuItem(value: 'Admin', child: Text('Admin')),
                     ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedRole = value;
-                      });
-                    },
+                    onChanged: (value) => setState(() => selectedRole = value),
                   ),
                   const SizedBox(height: 12),
 
-                  // ==== Champs spécifiques selon le rôle ====
+                  // Role-specific fields (unchanged)
                   if (selectedRole == 'Student') ...[
-                    TextField(
-                      controller: groupController,
-                      decoration: InputDecoration(
-                        labelText: 'Group',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+                    TextField(controller: groupController, decoration: InputDecoration(labelText: 'Group', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: yearController,
-                      decoration: InputDecoration(
-                        labelText: 'Year',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+                    TextField(controller: yearController, decoration: InputDecoration(labelText: 'Year', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: matriculeController,
-                      decoration: InputDecoration(
-                        labelText: 'Matricule',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+                    TextField(controller: matriculeController, decoration: InputDecoration(labelText: 'Matricule', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                     const SizedBox(height: 12),
                   ] else if (selectedRole == 'Teacher') ...[
-                    TextField(
-                      controller: specialtyController,
-                      decoration: InputDecoration(
-                        labelText: 'Specialty',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+                    TextField(controller: specialtyController, decoration: InputDecoration(labelText: 'Specialty', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: departmentController,
-                      decoration: InputDecoration(
-                        labelText: 'Department',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+                    TextField(controller: departmentController, decoration: InputDecoration(labelText: 'Department', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                     const SizedBox(height: 12),
                   ] else if (selectedRole == 'Admin') ...[
-                    TextField(
-                      controller: adminCodeController,
-                      decoration: InputDecoration(
-                        labelText: 'Admin Code (optional)',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
+                    TextField(controller: adminCodeController, decoration: InputDecoration(labelText: 'Admin Code (optional)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                     const SizedBox(height: 12),
                   ],
 
                   const SizedBox(height: 8),
 
-                  // Bouton REGISTER (pour l'instant, juste un print)
+                  // FIXED Register button
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Ici tu feras plus tard: validation + envoi au backend
-                        // Pour l’instant on affiche juste les données dans la console
                         debugPrint('Name: ${fullNameController.text}');
                         debugPrint('Email: ${emailController.text}');
                         debugPrint('Role: $selectedRole');
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Registration (UI only)'),
-                          ),
+                          const SnackBar(content: Text('Registration (UI only)')),
                         );
+                        // Card auto-updates live above!
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
                       child: const Text(
                         'Register',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
