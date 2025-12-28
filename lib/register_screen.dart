@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'profile_card.dart';
+import 'auth_service.dart';
+import 'user_model.dart';  // 👈 ADD THIS!
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,7 +11,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  // Controllers (same as yours)
+  // Controllers unchanged...
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -63,7 +65,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 👉 PROFILE CARD (shows Selsabil + live updates)
+                  // ProfileCard (unchanged - perfect!)
                   if (selectedRole == 'Student') ...[
                     const Text(
                       'Preview Card:',
@@ -80,49 +82,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 24),
                   ],
 
-                  const Text(
-                    'Sign Up',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Sign Up', textAlign: TextAlign.center, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
 
-                  // All your TextFields (unchanged - perfect!)
-                  TextField(
-                    controller: fullNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Full Name',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
+                  // All TextFields unchanged...
+                  TextField(controller: fullNameController, decoration: InputDecoration(labelText: 'Full Name', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                   const SizedBox(height: 12),
-
-                  TextField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
+                  TextField(controller: emailController, keyboardType: TextInputType.emailAddress, decoration: InputDecoration(labelText: 'Email', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                   const SizedBox(height: 12),
-
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
+                  TextField(controller: passwordController, obscureText: true, decoration: InputDecoration(labelText: 'Password', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                   const SizedBox(height: 12),
 
                   DropdownButtonFormField<String>(
                     value: selectedRole,
-                    decoration: InputDecoration(
-                      labelText: 'Role',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
+                    decoration: InputDecoration(labelText: 'Role', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
                     items: const [
                       DropdownMenuItem(value: 'Student', child: Text('Student')),
                       DropdownMenuItem(value: 'Teacher', child: Text('Teacher')),
@@ -132,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Role-specific fields (unchanged)
+                  // Role fields unchanged...
                   if (selectedRole == 'Student') ...[
                     TextField(controller: groupController, decoration: InputDecoration(labelText: 'Group', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                     const SizedBox(height: 12),
@@ -152,27 +125,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   const SizedBox(height: 8),
 
-                  // FIXED Register button
+                  // 👈 FIXED REGISTER BUTTON!
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: () {
-                        debugPrint('Name: ${fullNameController.text}');
-                        debugPrint('Email: ${emailController.text}');
-                        debugPrint('Role: $selectedRole');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Registration (UI only)')),
-                        );
-                        // Card auto-updates live above!
-                      },
+                      onPressed: selectedRole == 'Student' ? () async {  // Only students!
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registering... ⏳')));
+
+                        bool success = await AuthService.registerStudent({
+                          'name': fullNameController.text,
+                          'email': emailController.text,
+                          'group': groupController.text,
+                          'matricule': matriculeController.text,
+                        });
+
+                        if (success) {
+                          // 👈 ADD ADMIN APPROVAL HERE!
+                          await Future.delayed(Duration(seconds: 2)); // Fake admin check
+                          final newStudent = User(
+                            name: fullNameController.text,
+                            email: emailController.text,
+                            role: 'Student',
+                            status: 'approved', // Admin approved!
+                          );
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('✅ Student registered! (Auto-approved)'), backgroundColor: Colors.green),
+                          );
+                          debugPrint('🎉 REGISTERED & APPROVED: ${fullNameController.text} → ${emailController.text}');
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('❌ Registration failed')));
+                        }
+                      } : null,  // Disable for non-students
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
+                      child: const Text('Register', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                     ),
                   ),
                 ],

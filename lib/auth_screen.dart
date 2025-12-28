@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';  // 👈 ADD
 import 'user_model.dart';    // 👈 ADD
-
+import 'home_screen.dart';
 class AuthScreen extends StatefulWidget {  // 👈 Stateful!
   const AuthScreen({super.key});
 
@@ -118,9 +118,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
                       if (success) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Login OK! 🎉')),
+                          const SnackBar(content: Text('Login OK!  Going to dashboard... 🎉 ')),
                         );
-
+                        // 👈 NAVIGATION TO HOME SCREEN!
+                        await Future.delayed(Duration(milliseconds: 1500)); // Show snackbar 1.5s
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const HomeScreen())
+                        );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('❌ Wrong! Try: admin@campus.com / 123456')),
