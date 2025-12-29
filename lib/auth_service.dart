@@ -1,54 +1,56 @@
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import 'user_model.dart';
 
 class AuthService {
-  // 👈 FAKE DATABASE (like real MySQL)
-  static List<User> fakeDatabase = [
-    User(name: 'Admin', email: 'admin@campus.com', role: 'Admin', status: 'approved'),
-    User(name: 'Ahmed', email: 'ahmed@campus.com', role: 'Teacher', status: 'approved'),
-    User(name: 'Fatima', email: 'fatima@campus.com', role: 'Teacher', status: 'approved'),
-  ];
+  static const String baseUrl = 'http://localhost/compuse_app';  // 👈 YOUR URL!
 
-  // 👈 REGISTER STUDENT (fake API)
-  static Future<bool> registerStudent(Map<String, String> data) async {
-    await Future.delayed(Duration(seconds: 1)); // Fake network
-
-    final newStudent = User(
-      name: data['name']!,
-      email: data['email']!,
-      role: 'Student',
-      status: 'approved',  // Waits admin approval
-    );
-
-    fakeDatabase.add(newStudent);
-    print('✅ NEW STUDENT Approved: ${data['name']} (${data['email']})');
-    return true;
-  }
-
-  // 👈 LOGIN (check fake DB)
+  // 👈 REAL LOGIN API
   static Future<bool> login(String email, String password, String role) async {
-    await Future.delayed(Duration(milliseconds: 500));
-    print('🔍 TRY LOGIN: $email / $role');
     try {
-      final user = fakeDatabase.firstWhere(
-              (u) => u.email == email && u.role == role && u.status == 'approved'
+      final response = await http.post(
+        Uri.parse('$baseUrl/login.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password, 'role': role}),
       );
-      print('✅ MATCH FOUND: ${user.name} (${user.role})');  // 👈 DEBUG
-      if (password == '123456') {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('user_email', email);
-        await prefs.setString('user_role', role);
-        await prefs.setBool('is_logged_in', true);
-        print('🎉 LOGIN SUCCESS: $email');
-        return true;
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_email', email);
+          await prefs.setString('user_role', role);
+          await prefs.setBool('is_logged_in', true);
+          print('✅ REAL LOGIN: $email ($role)');
+          return true;
+        }
       }
     } catch (e) {
-      print('❌ NO MATCH FOR: $email / $role → $e');  // 👈 DEBUG
+      print('❌ API Error: $e');
     }
-    print('❌ LOGIN FAILED');
     return false;
   }
 
+  // 👈 REAL REGISTER API
+  static Future<bool> registerStudent(Map<String, String> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/register.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      final result = jsonDecode(response.body);
+      print('✅ REGISTER: ${result['message']}');
+      return result['success'] ?? false;
+    } catch (e) {
+      print('❌ Register Error: $e');
+      return false;
+    }
+  }
+
+  // 👈 SharedPreferences (unchanged)
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('is_logged_in') ?? false;
@@ -58,12 +60,11 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_role');
   }
-  // 👈 ADD THIS!
+
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('is_logged_in');
     await prefs.remove('user_email');
     await prefs.remove('user_role');
   }
-
 }

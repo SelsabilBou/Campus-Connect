@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'profile_card.dart';
 import 'auth_service.dart';
-import 'user_model.dart';  // 👈 ADD THIS!
+import 'user_model.dart';// 👈 ADD THIS!
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
