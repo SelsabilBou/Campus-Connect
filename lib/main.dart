@@ -1,18 +1,43 @@
 import 'package:flutter/material.dart';
-import 'welcome_screen.dart';
+import 'auth_screen.dart';
+import 'home_screen.dart';
+import 'admin_panal.dart';
+import 'auth_service.dart';
+import 'register_screen.dart'; // NEW
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final logged = await AuthService.isLoggedIn();
+  final role = await AuthService.getUserRole();
+
+  String initial;
+  if (!logged) {
+    initial = '/register'; // ✅ هنا يروح للـ Sign Up
+  } else if (role == 'Admin') {
+    initial = '/admin';
+  } else {
+    initial = '/home';
+  }
+
+  runApp(MyApp(initialRoute: initial));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String initialRoute;
+  const MyApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: WelcomeScreen(),
+      initialRoute: initialRoute,
+      routes: {
+        '/login': (_) => const AuthScreen(),
+        '/register': (_) => const RegisterScreen(), // ✅ route تاع sign up
+        '/home': (_) => const HomeScreen(),
+        '/admin': (_) => const AdminPanel(),
+      },
     );
   }
 }
