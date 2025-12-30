@@ -4,7 +4,7 @@ import 'home_screen.dart';
 import 'admin_panal.dart';
 import 'auth_service.dart';
 import 'register_screen.dart'; // NEW
-
+import 'welcome_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -13,7 +13,7 @@ Future<void> main() async {
 
   String initial;
   if (!logged) {
-    initial = '/register'; // ✅ هنا يروح للـ Sign Up
+    initial = '/welcome';
   } else if (role == 'Admin') {
     initial = '/admin';
   } else {
@@ -33,6 +33,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: initialRoute,
       routes: {
+        '/welcome': (_) => const WelcomeScreen(),
         '/login': (_) => const AuthScreen(),
         '/register': (_) => const RegisterScreen(), // ✅ route تاع sign up
         '/home': (_) => const HomeScreen(),

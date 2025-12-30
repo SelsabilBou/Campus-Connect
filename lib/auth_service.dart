@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'user_model.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://localhost/compuse_app';  // 👈 YOUR URL!
+  static const String baseUrl = 'http://10.0.2.2/compuse_app';  // 👈 YOUR URL!
 
   // 👈 REAL LOGIN API
   static Future<bool> login(String email, String password, String role) async {
@@ -13,8 +13,7 @@ class AuthService {
         Uri.parse('$baseUrl/login.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password, 'role': role}),
-      );
-//here
+      );  //here
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success']) {

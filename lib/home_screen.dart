@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';  // 👈 ADD THIS!
 import 'user_model.dart';
-
+import 'admin_panal.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -53,35 +53,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
     switch (role) {
       case 'Admin':
-        return _buildRoleCard('Admin Dashboard', Icons.admin_panel_settings, ['Manage students', 'Approve registrations', 'View analytics']);
+        return buildRoleCard('Admin Dashboard', Icons.admin_panel_settings, ['Manage students', 'Approve registrations', 'View analytics'],
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminPanel()),
+            );
+          },);
       case 'Teacher':
-        return _buildRoleCard('Teacher Dashboard', Icons.school, ['View classes', 'Manage attendance', 'Grade students']);
+        return buildRoleCard('Teacher Dashboard', Icons.school, ['View classes', 'Manage attendance', 'Grade students']);
       case 'Student':
-        return _buildRoleCard('Student Dashboard', Icons.card_membership, ['View profile', 'Upcoming events', 'Academic schedule']);
+        return buildRoleCard('Student Dashboard', Icons.card_membership, ['View profile', 'Upcoming events', 'Academic schedule']);
       default:
         return const CircularProgressIndicator();
     }
   }
 
-  Widget _buildRoleCard(String title, IconData icon, List<String> features) {
-    return Card(
-      margin: const EdgeInsets.all(20),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 64, color: const Color(0xFF4B2E83)),
-            const SizedBox(height: 16),
-            Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            ...features.map((f) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Text('• $f', style: const TextStyle(fontSize: 16)),
-            )),
-          ],
+  Widget buildRoleCard(
+      String title,
+      IconData icon,
+      List<String> features, {
+        VoidCallback? onTap,
+      }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        margin: const EdgeInsets.all(20),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 64, color: const Color(0xFF4B2E83)),
+              const SizedBox(height: 16),
+              Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              ...features.map((f) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(f, style: const TextStyle(fontSize: 16)),
+              )),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onTap,
+                child: const Text('Open'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 }
