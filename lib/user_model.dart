@@ -1,30 +1,37 @@
-class User {
+class UserModel {
+  final int id;
   final String name;
   final String email;
   final String role;
   final String status;
+  final String group; // grp de la BD, peut être vide
 
-  User({
+  UserModel({
+    required this.id,
     required this.name,
     required this.email,
     required this.role,
     required this.status,
+    required this.group,
   });
 
-  // Test accounts (all approved)
-  static List<User> testAccounts = [
-    User(name: 'Admin', email: 'admin@campus.com', role: 'Admin', status: 'approved'),
-    User(name: 'Ahmed', email: 'ahmed@campus.com', role: 'Teacher', status: 'approved'),
-    User(name: 'Fatima', email: 'fatima@campus.com', role: 'Teacher', status: 'approved'),
-    User(name: 'Selsabil', email: 'selsabil@campus.com', role: 'Student', status: 'approved'),
-  ];
-
-  static bool checkLogin(String email, String password, String role) {
-    try {
-      final user = testAccounts.firstWhere((u) => u.email == email && u.role == role);
-      return password == '123456';
-    } catch (e) {
-      return false;
-    }
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: int.parse(json['id'].toString()),
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      role: json['role']?.toString() ?? '',
+      status: json['status']?.toString() ?? '',
+      group: (json['grp'] ?? json['group'] ?? '').toString(),
+    );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'email': email,
+    'role': role,
+    'status': status,
+    'group': group,
+  };
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'auth_service.dart';  // 👈 ADD THIS!
-import 'user_model.dart';
+import 'auth_service.dart';
 import 'admin_panal.dart';
+import 'student_portal.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -18,9 +19,11 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadUserRole();
   }
 
-  _loadUserRole() async {
+  Future<void> _loadUserRole() async {
     final role = await AuthService.getUserRole();
-    if (mounted) setState(() => userRole = role);  // 👈 mounted check
+    if (mounted) {
+      setState(() => userRole = role);
+    }
   }
 
   @override
@@ -53,17 +56,37 @@ class _HomeScreenState extends State<HomeScreen> {
 
     switch (role) {
       case 'Admin':
-        return buildRoleCard('Admin Dashboard', Icons.admin_panel_settings, ['Manage students', 'Approve registrations', 'View analytics'],
+        return buildRoleCard(
+          'Admin Dashboard',
+          Icons.admin_panel_settings,
+          ['Manage students', 'Approve registrations', 'View analytics'],
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AdminPanel()),
             );
-          },);
+          },
+        );
       case 'Teacher':
-        return buildRoleCard('Teacher Dashboard', Icons.school, ['View classes', 'Manage attendance', 'Grade students']);
+        return buildRoleCard(
+          'Teacher Dashboard',
+          Icons.school,
+          ['View classes', 'Manage attendance', 'Grade students'],
+        );
       case 'Student':
-        return buildRoleCard('Student Dashboard', Icons.card_membership, ['View profile', 'Upcoming events', 'Academic schedule']);
+        return buildRoleCard(
+          'Student Dashboard',
+          Icons.card_membership,
+          ['View profile', 'Upcoming events', 'Academic schedule'],
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const StudentPortalScreen(),
+              ),
+            );
+          },
+        );
       default:
         return const CircularProgressIndicator();
     }
@@ -86,12 +109,23 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(icon, size: 64, color: const Color(0xFF4B2E83)),
               const SizedBox(height: 16),
-              Text(title, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 16),
-              ...features.map((f) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(f, style: const TextStyle(fontSize: 16)),
-              )),
+              ...features.map(
+                    (f) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    f,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: onTap,
@@ -103,5 +137,4 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
 }

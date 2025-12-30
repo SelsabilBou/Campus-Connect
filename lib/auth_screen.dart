@@ -128,9 +128,10 @@ class _AuthScreenState extends State<AuthScreen> {
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('❌ Wrong! Try: admin@campus.com / 123456')),
+                          const SnackBar(content: Text('❌ Wrong email/password or role')),
                         );
                       }
+
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
