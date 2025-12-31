@@ -18,7 +18,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController matriculeController = TextEditingController();
   final TextEditingController specialtyController = TextEditingController();
   final TextEditingController departmentController = TextEditingController();
-  final TextEditingController adminCodeController = TextEditingController();
 
   String? selectedRole;
 
@@ -32,8 +31,67 @@ class _RegisterScreenState extends State<RegisterScreen> {
     matriculeController.dispose();
     specialtyController.dispose();
     departmentController.dispose();
-    adminCodeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onRegister() async {
+    if (selectedRole == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please choose a role.')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Registering... ⏳')),
+    );
+
+    bool success = false;
+
+    if (selectedRole == 'Student') {
+      success = await AuthService.registerStudent({
+        'name': fullNameController.text.trim(),
+        'email': emailController.text.trim(),
+        'group': groupController.text.trim(),
+        'matricule': matriculeController.text.trim(),
+        'password': passwordController.text.trim(),
+        'role': 'Student',
+      });
+    } else if (selectedRole == 'Teacher') {
+      // TODO: créer plus tard un endpoint dédié; pour l’instant même PHP
+      success = await AuthService.registerStudent({
+        'name': fullNameController.text.trim(),
+        'email': emailController.text.trim(),
+        'password': passwordController.text.trim(),
+        'role': 'Teacher',
+        'specialty': specialtyController.text.trim(),
+        'department': departmentController.text.trim(),
+      });
+    } else if (selectedRole == 'Admin') {
+      // Admin simple, sans code
+      success = await AuthService.registerStudent({
+        'name': fullNameController.text.trim(),
+        'email': emailController.text.trim(),
+        'password': passwordController.text.trim(),
+        'role': 'Admin',
+      });
+    }
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Registration successful!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Registration failed'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -53,7 +111,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
+            padding:
+            const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -66,7 +125,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const Text(
                     'Sign Up',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    style:
+                    TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
 
@@ -114,8 +174,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'Student', child: Text('Student')),
-                      DropdownMenuItem(value: 'Teacher', child: Text('Teacher')),
+                      DropdownMenuItem(
+                          value: 'Student', child: Text('Student')),
+                      DropdownMenuItem(
+                          value: 'Teacher', child: Text('Teacher')),
                       DropdownMenuItem(value: 'Admin', child: Text('Admin')),
                     ],
                     onChanged: (value) => setState(() => selectedRole = value),
@@ -174,17 +236,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                  ] else if (selectedRole == 'Admin') ...[
-                    TextField(
-                      controller: adminCodeController,
-                      decoration: InputDecoration(
-                        labelText: 'Admin Code (optional)',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
                   ],
 
                   const SizedBox(height: 8),
@@ -192,58 +243,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
-                      onPressed: selectedRole == 'Student'
-                          ? () async {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Registering... ⏳')),
-                        );
-
-                        final success = await AuthService.registerStudent({
-                          'name': fullNameController.text.trim(),
-                          'email': emailController.text.trim(),
-                          'group': groupController.text.trim(),
-                          'matricule': matriculeController.text.trim(),
-                          'password': passwordController.text.trim(),
-                        });
-
-                        if (success) {
-                          await Future.delayed(const Duration(seconds: 2));
-
-                          // Création d'un UserModel juste pour debug (id null)
-                          final newStudent = UserModel(
-                            id: 0,
-                            name: fullNameController.text.trim(),
-                            email: emailController.text.trim(),
-                            role: 'Student',
-                            status: 'pending',
-                            group: groupController.text.trim(),
-                          );
-
-                          debugPrint(
-                            '🎉 REGISTERED & APPROVED: '
-                                '${newStudent.name} → ${newStudent.email}',
-                          );
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                '✅ Student registered! (Auto-approved)',
-                              ),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('❌ Registration failed'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      }
-                          : null,
+                      onPressed: _onRegister,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
