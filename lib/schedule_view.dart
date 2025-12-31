@@ -13,12 +13,24 @@ class _ScheduleViewState extends State<ScheduleView> {
 
   bool _loading = true;
   String? _error;
-  List<Map<String, String>> _items = [];
+
+  // 🔍 NEW
+  final TextEditingController _searchCtrl = TextEditingController();
+  List<Map<String, String>> _allItems = [];
+  List<Map<String, String>> _filteredItems = [];
 
   @override
   void initState() {
     super.initState();
     _load();
+    _searchCtrl.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.removeListener(_onSearchChanged);
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -32,7 +44,8 @@ class _ScheduleViewState extends State<ScheduleView> {
       if (user == null || user.group.isEmpty) {
         if (!mounted) return;
         setState(() {
-          _items = [];
+          _allItems = [];
+          _filteredItems = [];
           _error = null;
         });
         return;
@@ -40,7 +53,10 @@ class _ScheduleViewState extends State<ScheduleView> {
 
       final data = await _service.viewSchedule(user.group);
       if (!mounted) return;
-      setState(() => _items = data);
+      setState(() {
+        _allItems = data;
+        _applyFilter(); // initialise la liste filtrée
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = 'Failed to load schedule: $e');
@@ -49,10 +65,32 @@ class _ScheduleViewState extends State<ScheduleView> {
     }
   }
 
+  void _onSearchChanged() {
+    _applyFilter();
+  }
+
+  void _applyFilter() {
+    final q = _searchCtrl.text.trim().toLowerCase();
+    if (q.isEmpty) {
+      _filteredItems = List<Map<String, String>>.from(_allItems);
+    } else {
+      _filteredItems = _allItems.where((row) {
+        final day = (row['day'] ?? '').toLowerCase();
+        final course = (row['course'] ?? '').toLowerCase();
+        final time = (row['time'] ?? '').toLowerCase();
+        return day.contains(q) || course.contains(q) || time.contains(q);
+      }).toList();
+    }
+    if (mounted) {
+      setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
     if (_error != null) {
       return Center(
         child: Column(
@@ -69,23 +107,47 @@ class _ScheduleViewState extends State<ScheduleView> {
       );
     }
 
-    if (_items.isEmpty) {
+    if (_allItems.isEmpty) {
       return const Center(child: Text('No schedule available yet.'));
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _items.length,
-      itemBuilder: (context, i) {
-        final row = _items[i];
-        return Card(
-          child: ListTile(
-            leading: const Icon(Icons.schedule),
-            title: Text('${row['day']} - ${row['course']}'),
-            subtitle: Text(row['time'] ?? ''),
+    return Column(
+      children: [
+        // 🔍 Barre de recherche
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: InputDecoration(
+              hintText: 'Search by day, course, or time...',
+              prefixIcon: const Icon(Icons.search),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+              ),
+            ),
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 4),
+        Expanded(
+          child: _filteredItems.isEmpty
+              ? const Center(child: Text('No schedule matches your search.'))
+              : ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: _filteredItems.length,
+            itemBuilder: (context, i) {
+              final row = _filteredItems[i];
+              return Card(
+                child: ListTile(
+                  leading: const Icon(Icons.schedule),
+                  title: Text('${row['day']} - ${row['course']}'),
+                  subtitle: Text(row['time'] ?? ''),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

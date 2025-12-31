@@ -5,6 +5,9 @@ import 'student_service.dart';
 import 'file_model.dart';
 import 'auth_service.dart';
 import 'user_model.dart';
+import 'chat_screen.dart'; // 👈 NEW
+import 'event_service.dart';
+import 'event_model.dart';
 
 class StudentPortalScreen extends StatefulWidget {
   const StudentPortalScreen({super.key});
@@ -216,7 +219,7 @@ class _TabItem extends StatelessWidget {
   }
 }
 
-// ---------- Dummy content (Phase 1) ----------
+// ---------- Profile (avec bouton Chat) ----------
 
 class _ProfileViewDummy extends StatefulWidget {
   const _ProfileViewDummy();
@@ -227,17 +230,47 @@ class _ProfileViewDummy extends StatefulWidget {
 
 class _ProfileViewDummyState extends State<_ProfileViewDummy> {
   UserModel? _user;
+  List<EventModel> _events = [];
+  bool _loadingEvents = true;
+  String? _eventsError;
 
   @override
   void initState() {
     super.initState();
-    _loadUser();
+    _loadUserAndEvents();
   }
 
-  Future<void> _loadUser() async {
-    final u = await AuthService.getLoggedInUser();
-    if (!mounted) return;
-    setState(() => _user = u);
+  Future<void> _loadUserAndEvents() async {
+    try {
+      final u = await AuthService.getLoggedInUser();
+      if (!mounted) return;
+      setState(() => _user = u);
+
+      if (u == null || u.group.isEmpty) {
+        setState(() {
+          _events = [];
+          _eventsError = null;
+          _loadingEvents = false;
+        });
+        return;
+      }
+
+      final data =
+      await EventService.instance.fetchEventsForGroup(u.group);
+      if (!mounted) return;
+      setState(() {
+        _events = data;
+        _eventsError = null;
+        _loadingEvents = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _events = [];
+        _eventsError = 'Failed to load events: $e';
+        _loadingEvents = false;
+      });
+    }
   }
 
   @override
@@ -247,6 +280,7 @@ class _ProfileViewDummyState extends State<_ProfileViewDummy> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // ----- Card profil -----
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -297,20 +331,106 @@ class _ProfileViewDummyState extends State<_ProfileViewDummy> {
             ],
           ),
         ),
+
         const SizedBox(height: 20),
         const Text(
           'Today',
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
         const SizedBox(height: 10),
-        const Text(
-          'No events for today. Backend integration in progress.',
-          style: TextStyle(color: Colors.black54),
+
+        // ----- Events / Exams -----
+        if (_loadingEvents)
+          const Center(child: CircularProgressIndicator())
+        else if (_eventsError != null)
+          Text(
+            _eventsError!,
+            style: const TextStyle(color: Colors.red),
+          )
+        else if (_events.isEmpty)
+            const Text(
+              'No events for today. Backend integration in progress.',
+              style: TextStyle(color: Colors.black54),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _events.map((e) {
+                final dateStr =
+                    '${e.eventDate.year}-${e.eventDate.month.toString().padLeft(2, '0')}-${e.eventDate.day.toString().padLeft(2, '0')} '
+                    '${e.eventDate.hour.toString().padLeft(2, '0')}:${e.eventDate.minute.toString().padLeft(2, '0')}';
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        e.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        dateStr,
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 12,
+                        ),
+                      ),
+                      if (e.description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          e.description,
+                          style: const TextStyle(color: Colors.black87),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+
+        const SizedBox(height: 20),
+
+        // ----- Bouton chat (si tu l’as gardé) -----
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ChatScreen(
+                  otherUserId: 5,
+                  otherUserName: 'Samir',
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.chat_bubble_outline),
+          label: const Text('Open chat with Samir'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF6D28D9),
+            foregroundColor: Colors.white,
+          ),
         ),
       ],
     );
   }
 }
+
+// ---------- Files avec Search ----------
 
 class _FilesDummyView extends StatefulWidget {
   const _FilesDummyView();
@@ -324,19 +444,46 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
 
   bool _loading = true;
   String? _error;
-  List<FileModel> _files = [];
+
+  final TextEditingController _searchCtrl = TextEditingController();
+  final ScrollController _scrollCtrl = ScrollController();
+
+  final List<FileModel> _allFiles = [];
+  List<FileModel> _filteredFiles = [];
+
+  int _page = 1;
+  final int _limit = 20;
+  bool _hasMore = true;
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _searchCtrl.addListener(_onSearchChanged);
+    _scrollCtrl.addListener(_onScroll);
+    _load(firstPage: true);
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  @override
+  void dispose() {
+    _scrollCtrl.removeListener(_onScroll);
+    _scrollCtrl.dispose();
+    _searchCtrl.removeListener(_onSearchChanged);
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load({required bool firstPage}) async {
+    if (firstPage) {
+      setState(() {
+        _loading = true;
+        _error = null;
+        _allFiles.clear();
+        _filteredFiles.clear();
+        _page = 1;
+        _hasMore = true;
+      });
+    }
 
     try {
       final user = await AuthService.getLoggedInUser();
@@ -345,28 +492,73 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
       if (groupKey.isEmpty) {
         if (!mounted) return;
         setState(() {
-          _files = [];
+          _allFiles.clear();
+          _filteredFiles.clear();
           _error = null;
+          _loading = false;
+          _hasMore = false;
         });
         return;
       }
 
-      final data = await _service.viewFiles(groupKey);
+      final result =
+      await _service.viewFilesPaged(groupKey, _page, _limit);
+
       if (!mounted) return;
-      setState(() => _files = data);
+
+      setState(() {
+        _allFiles.addAll(result.files);
+        _hasMore = result.hasMore;
+        _page++;
+        _applyFilter();
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = 'Failed to load files: $e');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _isLoadingMore = false;
+      });
     }
   }
 
+  void _onScroll() {
+    if (!_hasMore || _isLoadingMore || _loading) return;
+    if (_scrollCtrl.position.pixels >=
+        _scrollCtrl.position.maxScrollExtent - 200) {
+      _isLoadingMore = true;
+      _load(firstPage: false);
+    }
+  }
+
+  void _onSearchChanged() {
+    _applyFilter();
+  }
+
+  void _applyFilter() {
+    final query = _searchCtrl.text.trim().toLowerCase();
+    List<FileModel> base = List<FileModel>.from(_allFiles);
+
+    if (query.isNotEmpty) {
+      base = base.where((f) {
+        final name = f.name.toLowerCase();
+        final tag = f.tag.toLowerCase();
+        return name.contains(query) || tag.contains(query);
+      }).toList();
+    }
+
+    _filteredFiles = base;
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
-    if (_error != null) {
+    if (_loading && _allFiles.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null && _allFiles.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -374,7 +566,7 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
             Text(_error!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 8),
             ElevatedButton(
-              onPressed: _load,
+              onPressed: () => _load(firstPage: true),
               child: const Text('Retry'),
             ),
           ],
@@ -382,50 +574,87 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
       );
     }
 
-    if (_files.isEmpty) {
-      return const Center(child: Text('No files available yet.'));
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _files.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final f = _files[index];
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
-              )
-            ],
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: InputDecoration(
+              hintText: 'Search by name or tag...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+              ),
+            ),
           ),
-          child: Row(
-            children: [
-              const Icon(Icons.insert_drive_file, color: Colors.black45),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  f.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 4),
+        Expanded(
+          child: _allFiles.isEmpty
+              ? const Center(child: Text('No files available yet.'))
+              : (_filteredFiles.isEmpty
+              ? const Center(
+            child: Text('No files match your search.'),
+          )
+              : ListView.separated(
+            controller: _scrollCtrl,
+            padding: const EdgeInsets.all(16),
+            itemCount:
+            _filteredFiles.length + (_hasMore ? 1 : 0),
+            separatorBuilder: (_, __) =>
+            const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              if (index == _filteredFiles.length && _hasMore) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              }
+              final f = _filteredFiles[index];
+              return Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                      Colors.black.withOpacity(0.06),
+                      blurRadius: 18,
+                      offset: const Offset(0, 10),
+                    )
+                  ],
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                f.tag,
-                style: const TextStyle(color: Colors.black54),
-              ),
-            ],
-          ),
-        );
-      },
+                child: Row(
+                  children: [
+                    const Icon(Icons.insert_drive_file,
+                        color: Colors.black45),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        f.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      f.tag,
+                      style: const TextStyle(
+                          color: Colors.black54),
+                    ),
+                  ],
+                ),
+              );
+            },
+          )),
+        ),
+      ],
     );
   }
 }
