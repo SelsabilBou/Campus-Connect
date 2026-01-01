@@ -6,6 +6,9 @@ class UserModel {
   final String status;
   final String group; // grp de la BD, peut être vide
 
+  // Phase 5 (Teacher auth)
+  final String? apiKey; // <-- ADD (teacher only)
+
   UserModel({
     required this.id,
     required this.name,
@@ -13,6 +16,7 @@ class UserModel {
     required this.role,
     required this.status,
     required this.group,
+    this.apiKey,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +27,9 @@ class UserModel {
       role: json['role']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
       group: (json['grp'] ?? json['group'] ?? '').toString(),
+
+      // Phase 5
+      apiKey: json['api_key']?.toString(),
     );
   }
 
@@ -33,5 +40,8 @@ class UserModel {
     'role': role,
     'status': status,
     'group': group,
+
+    // Phase 5
+    'api_key': apiKey,
   };
 }
