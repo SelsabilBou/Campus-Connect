@@ -46,13 +46,18 @@ class StudentService {
   // ---------- Marks ----------
 
   Future<List<Map<String, dynamic>>> viewMarks(int studentId) async {
-    final url = Uri.parse('$_baseUrl/view_marks.php');
+    final url = Uri.parse('http://10.0.2.2/compuse_app/view_marks.php');
+
+    print('➡️ VIEW MARKS URL = $url  studentId=$studentId');
 
     final response = await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'student_id': studentId}),
     );
+
+    print('⬅️ MARKS STATUS = ${response.statusCode}');
+    print('⬅️ MARKS BODY = ${response.body}');
 
     if (response.statusCode != 200) {
       throw Exception('HTTP ${response.statusCode}');
