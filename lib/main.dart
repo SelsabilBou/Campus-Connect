@@ -5,20 +5,18 @@ import 'auth_screen.dart';
 import 'home_screen.dart';
 import 'admin_panal.dart';
 import 'register_screen.dart';
-
-// global (باش notification_service.dart يقدر يستعملها)
+import 'welcome_screen.dart'; // <— importe ta page welcome
+import 'teacher_dashboard.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // init local notifications (Android)
   const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
   const initSettings = InitializationSettings(android: androidInit);
   await flutterLocalNotificationsPlugin.initialize(initSettings);
 
-  // دائما نبداو بـ login
   runApp(const MyApp());
 }
 
@@ -29,12 +27,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      // première page = WelcomeScreen
+      initialRoute: '/welcome',
       routes: {
+        '/welcome': (_) => const WelcomeScreen(),
         '/login': (_) => const AuthScreen(),
         '/register': (_) => const RegisterScreen(),
         '/home': (_) => const HomeScreen(),
         '/admin': (_) => const AdminPanel(),
+        '/teacher': (_) => const TeacherDashboard(),
       },
     );
   }

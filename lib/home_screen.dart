@@ -27,10 +27,13 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pushReplacementNamed(context, '/student');
     } else if (user.role == 'Admin') {
       Navigator.pushReplacementNamed(context, '/admin');
+    } else if (user.role == 'Teacher') {
+      Navigator.pushReplacementNamed(context, '/teacher');  // 👈 NEW
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

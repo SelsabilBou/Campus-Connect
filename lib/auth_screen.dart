@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'auth_service.dart';  // 👈 ADD
-import 'user_model.dart';    // 👈 ADD
-import 'home_screen.dart';
+import 'auth_service.dart';
+import 'admin_panal.dart';
+import 'teacher_dashboard.dart';
+import 'student_dashboard.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -13,13 +14,58 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  String? selectedRole = 'Admin';  // Default Admin
+  String selectedRole = 'Admin'; // valeur par défaut
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _onLogin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter email and password')),
+      );
+      return;
+    }
+
+    final success = await AuthService.login(email, password, selectedRole);
+
+    if (!mounted) return;
+
+    if (success) {
+      final user = await AuthService.getLoggedInUser();
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login error, user not found')),
+        );
+        return;
+      }
+
+
+      Widget target;
+      if (user.role == 'Admin') {
+        target = const AdminPanel();
+      } else if (user.role == 'Teacher') {
+        target = const TeacherDashboard();
+      } else {
+        target = const StudentDashboardScreen();
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => target),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ Wrong email/password or role')),
+      );
+    }
   }
 
   @override
@@ -104,44 +150,21 @@ class _AuthScreenState extends State<AuthScreen> {
                     DropdownMenuItem(value: 'Teacher', child: Text('Teacher')),
                     DropdownMenuItem(value: 'Student', child: Text('Student')),
                   ],
-                  onChanged: (value) => setState(() => selectedRole = value),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => selectedRole = value);
+                    }
+                  },
                 ),
                 const SizedBox(height: 8),
 
                 SizedBox(
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      bool success = await AuthService.login(
-                        emailController.text,
-                        passwordController.text,
-                        selectedRole!,
-                      );
-
-                      if (success) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Login OK!  Going to dashboard... 🎉 '),
-                          ),
-                        );
-                        await Future.delayed(const Duration(milliseconds: 1500));
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomeScreen(),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('❌ Wrong email/password or role'),
-                          ),
-                        );
-                      }
-                    },
+                    onPressed: _onLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
-                      foregroundColor: Colors.white, // 👈 texte + icône blancs
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
