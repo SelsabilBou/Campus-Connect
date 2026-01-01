@@ -7,7 +7,6 @@ class AuthService {
   static const _userKey = 'logged_user';
   static const String baseUrl = 'http://10.0.2.2/compuse_app';
 
-  // LOGIN API
   static Future<bool> login(String email, String password, String role) async {
     try {
       final uri = Uri.parse('$baseUrl/login.php');
@@ -22,44 +21,25 @@ class AuthService {
         }),
       );
 
-      print('LOGIN URL=$uri');
-      print('LOGIN STATUS=${response.statusCode}');
-      print('LOGIN BODY=${response.body}');
-
       if (response.statusCode != 200) return false;
 
       final data = jsonDecode(response.body);
+      if (data['success'] != true || data['user'] == null) return false;
 
-      // On attend un JSON du style:
-      // { "success": true, "user": { "id":1, "name":"...", "email":"...", "role":"student", "group":"L2-G3" } }
-      final bool success = data['success'] == true;
-      if (!success) return false;
-
-      if (data['user'] == null) {
-        // Pas d'objet user → on ne peut pas remplir le profil
-        return false;
-      }
-
-      final userMap = data['user'] as Map<String, dynamic>;
-      final user = UserModel.fromJson(userMap);
+      final user = UserModel.fromJson(data['user'] as Map<String, dynamic>);
 
       final prefs = await SharedPreferences.getInstance();
-      // On garde l'objet complet pour le profil + autres onglets
       await prefs.setString(_userKey, jsonEncode(user.toJson()));
-      // Optionnel: garder aussi email/role/flag
       await prefs.setString('user_email', user.email);
       await prefs.setString('user_role', user.role);
       await prefs.setBool('is_logged_in', true);
 
-      print('✅ REAL LOGIN: ${user.email} (${user.role})');
       return true;
-    } catch (e) {
-      print('❌ API Error: $e');
+    } catch (_) {
       return false;
     }
   }
 
-  // REGISTER API
   static Future<bool> registerStudent(Map<String, String> data) async {
     try {
       final uri = Uri.parse('$baseUrl/register.php');
@@ -70,21 +50,15 @@ class AuthService {
         body: jsonEncode(data),
       );
 
-      print('REGISTER STATUS=${response.statusCode}');
-      print('REGISTER BODY=${response.body}');
-
       if (response.statusCode != 200) return false;
 
       final result = jsonDecode(response.body);
-      print('✅ REGISTER: ${result['message']}');
       return result['success'] == true;
-    } catch (e) {
-      print('❌ Register Error: $e');
+    } catch (_) {
       return false;
     }
   }
 
-  // SharedPreferences helpers
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('is_logged_in') ?? false;
@@ -107,7 +81,21 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = prefs.getString(_userKey);
     if (jsonStr == null) return null;
-    final map = jsonDecode(jsonStr) as Map<String, dynamic>;
-    return UserModel.fromJson(map);
+    return UserModel.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
+  }
+
+  // -------- Phase 5 helpers --------
+  static Future<int?> getTeacherId() async {
+    final u = await getLoggedInUser();
+    if (u == null) return null;
+    if (u.role.toLowerCase() != 'teacher') return null;
+    return u.id;
+  }
+
+  static Future<String?> getTeacherApiKey() async {
+    final u = await getLoggedInUser();
+    if (u == null) return null;
+    if (u.role.toLowerCase() != 'teacher') return null;
+    return u.apiKey;
   }
 }
