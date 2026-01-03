@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
+import 'student_portal.dart';
 import 'auth_screen.dart';
 import 'home_screen.dart';
 import 'admin_panal.dart';
@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/welcome': (_) => const WelcomeScreen(),
         '/login': (_) => const AuthScreen(),
+        '/student': (context) => const StudentPortalScreen(),
         '/register': (_) => const RegisterScreen(),
         '/home': (_) => const HomeScreen(),
         '/admin': (_) => const AdminPanel(),

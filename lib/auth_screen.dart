@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-import 'admin_panal.dart';
-import 'teacher_dashboard.dart';
-import 'student_dashboard.dart';
+
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -49,18 +47,17 @@ class _AuthScreenState extends State<AuthScreen> {
 
 
       Widget target;
+      // APRÈS
       if (user.role == 'Admin') {
-        target = const AdminPanel();
+        Navigator.pushReplacementNamed(context, '/admin');
       } else if (user.role == 'Teacher') {
-        target = const TeacherDashboard();
+        Navigator.pushReplacementNamed(context, '/teacher');
+      } else if (user.role == 'Student') {
+        Navigator.pushReplacementNamed(context, '/student'); // StudentPortalScreen
       } else {
-        target = const StudentDashboardScreen();
+        Navigator.pushReplacementNamed(context, '/login');
       }
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => target),
-      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Wrong email/password or role')),
