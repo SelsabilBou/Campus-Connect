@@ -34,6 +34,36 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
         child: SafeArea(
           child: Column(
             children: [
+              // ================== LOGOUT BUTTON (NEW) ==================
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () async {
+                        await AuthService.logout();
+                        if (!context.mounted) return;
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/welcome',
+                              (route) => false,
+                        );
+                      },
+                      icon: const Icon(Icons.logout, color: Colors.white),
+                      label: const Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // =========================================================
+
               const SizedBox(height: 24),
               const Text(
                 'Student Panel',
@@ -255,8 +285,7 @@ class _ProfileViewDummyState extends State<_ProfileViewDummy> {
         return;
       }
 
-      final data =
-      await EventService.instance.fetchEventsForGroup(u.group);
+      final data = await EventService.instance.fetchEventsForGroup(u.group);
       if (!mounted) return;
       setState(() {
         _events = data;
@@ -501,8 +530,7 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
         return;
       }
 
-      final result =
-      await _service.viewFilesPaged(groupKey, _page, _limit);
+      final result = await _service.viewFilesPaged(groupKey, _page, _limit);
 
       if (!mounted) return;
 
@@ -600,10 +628,8 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
               : ListView.separated(
             controller: _scrollCtrl,
             padding: const EdgeInsets.all(16),
-            itemCount:
-            _filteredFiles.length + (_hasMore ? 1 : 0),
-            separatorBuilder: (_, __) =>
-            const SizedBox(height: 10),
+            itemCount: _filteredFiles.length + (_hasMore ? 1 : 0),
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               if (index == _filteredFiles.length && _hasMore) {
                 return const Padding(
@@ -621,8 +647,7 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color:
-                      Colors.black.withOpacity(0.06),
+                      color: Colors.black.withOpacity(0.06),
                       blurRadius: 18,
                       offset: const Offset(0, 10),
                     )
@@ -645,8 +670,8 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
                     const SizedBox(width: 8),
                     Text(
                       f.tag,
-                      style: const TextStyle(
-                          color: Colors.black54),
+                      style:
+                      const TextStyle(color: Colors.black54),
                     ),
                   ],
                 ),

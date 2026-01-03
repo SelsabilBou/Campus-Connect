@@ -31,9 +31,9 @@ class _AdminPanelState extends State<AdminPanel> {
     if (!logged || role != 'Admin') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Accès refusé : Admin فقط")),
-      ); // [web:225]
+      );
 
-      // يرجع لصفحة login (routes لازم يكونو في main.dart) [web:261]
+      // يرجع لصفحة login (routes لازم يكونو في main.dart)
       Navigator.pushReplacementNamed(context, '/login');
     }
   }
@@ -52,6 +52,36 @@ class _AdminPanelState extends State<AdminPanel> {
         child: SafeArea(
           child: Column(
             children: [
+              // ================== LOGOUT BUTTON (NEW) ==================
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () async {
+                        await AuthService.logout();
+                        if (!context.mounted) return;
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/welcome',
+                              (route) => false,
+                        );
+                      },
+                      icon: const Icon(Icons.logout, color: Colors.white),
+                      label: const Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // =========================================================
+
               const SizedBox(height: 24),
               const Text(
                 'Admin Panel',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'course_list.dart';
 import 'marks_screen.dart';
 import 'attendance_screen.dart';
+import 'auth_service.dart'; // ✅ NEW
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -19,7 +20,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
 
   late final List<Widget> _tabs = const [
     KeyedSubtree(key: PageStorageKey("tab_courses"), child: CourseListScreen()),
-    KeyedSubtree(key: PageStorageKey("tab_attendance"), child: AttendanceScreen()),
+    KeyedSubtree(
+        key: PageStorageKey("tab_attendance"), child: AttendanceScreen()),
     KeyedSubtree(key: PageStorageKey("tab_marks"), child: MarksScreen()),
   ];
 
@@ -40,6 +42,37 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // ================== LOGOUT BUTTON (NEW) ==================
+                Padding(
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () async {
+                          await AuthService.logout();
+                          if (!context.mounted) return;
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/welcome',
+                                (route) => false,
+                          );
+                        },
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        label: const Text(
+                          'Logout',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // =========================================================
+
                 const SizedBox(height: 24),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 22),
@@ -65,7 +98,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 18),
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
