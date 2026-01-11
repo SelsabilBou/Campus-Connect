@@ -1,13 +1,14 @@
-// admin_panal.dart  (Phase 4 + Phase 5 permissions guard)
+// admin_panal.dart (sans bouton Open : les tabs ouvrent directement les écrans)
 import 'package:flutter/material.dart';
 import 'student_management.dart';
 import 'teacher_management.dart';
 import 'file_upload.dart';
 import 'schedule_calender.dart';
-import 'auth_service.dart'; // NEW (Phase 5)
+import 'auth_service.dart';
+import 'admin_service.dart';
 
 class AdminPanel extends StatefulWidget {
-  const AdminPanel({super.key});
+  const AdminPanel({super.key});//constructeur de classe
 
   @override
   State<AdminPanel> createState() => _AdminPanelState();
@@ -18,47 +19,54 @@ class _AdminPanelState extends State<AdminPanel> {
 
   @override
   void initState() {
-    super.initState();
-    _guardAdmin(); // Phase 5: restrict to Admin only
+    super.initState();//appelle la version parent de initState
+    _guardAdmin();//pour verifier esq rahou admin wla non
   }
 
   Future<void> _guardAdmin() async {
-    final logged = await AuthService.isLoggedIn();
-    final role = await AuthService.getUserRole();
+    final logged = await AuthService.isLoggedIn();// login
+    final role = await AuthService.getUserRole();//recuperer le role
 
-    if (!mounted) return;
+    if (!mounted) return;//ki tkoun la page m'affichya ykeml lkhedma normall sinon y7bes
 
     if (!logged || role != 'Admin') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Accès refusé : Admin فقط")),
+      ScaffoldMessenger.of(context).showSnackBar(//affichage d'un message en bas de l'ecran
+        const SnackBar(content: Text("Accès refusé")),
       );
-
-      // يرجع لصفحة login (routes لازم يكونو في main.dart)
-      Navigator.pushReplacementNamed(context, '/login');
+      Navigator.pushReplacementNamed(context, '/login');//y3ewd yweli login psq raho mahouch admin
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    Widget bodyChild;
+    if (selectedTab == 0) {
+      bodyChild = const StudentManagement();
+    } else if (selectedTab == 1) {
+      bodyChild = const TeacherManagement();
+    } else {
+      bodyChild = const _FilesTab();
+    }
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+          gradient: LinearGradient(// degradation de couleur
+            begin: Alignment.topLeft,// ybda la degradation mn top left
+            end: Alignment.bottomRight,// win yhbs
             colors: [Color(0xFFBFA8FF), Color(0xFF6D28D9)],
           ),
         ),
-        child: SafeArea(
+        child: SafeArea(//ajout automatiquement de padding
           child: Column(
             children: [
-              // ================== LOGOUT BUTTON (NEW) ==================
+              // logout
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.end,//hez child lakher
                   children: [
-                    TextButton.icon(
+                    TextButton.icon(//bouton de type texte avec icon
                       onPressed: () async {
                         await AuthService.logout();
                         if (!context.mounted) return;
@@ -80,26 +88,21 @@ class _AdminPanelState extends State<AdminPanel> {
                   ],
                 ),
               ),
-              // =========================================================
-
-              const SizedBox(height: 24),
+              const SizedBox(height: 10),
               const Text(
-                'Admin Panel',
+                'Admin',
                 style: TextStyle(
                   fontSize: 44,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
-                'Manage campus data',
-                style: TextStyle(fontSize: 18, color: Colors.white70),
-              ),
-              const SizedBox(height: 22),
-              Expanded(
-                child: Container(
-                  width: double.infinity,
+
+              const SizedBox(height: 40),
+              Expanded(//prend tout l'espace vertical
+                child: Container
+                  (
+                  width: double.infinity,//container y7kem tout la largeure disponible
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                   decoration: const BoxDecoration(
                     color: Colors.white,
@@ -110,47 +113,13 @@ class _AdminPanelState extends State<AdminPanel> {
                   ),
                   child: Column(
                     children: [
-                      _TabsPill(
+                      _TabsPill(// widget qui designe la barre d'onglet
                         selectedIndex: selectedTab,
                         onChanged: (i) => setState(() => selectedTab = i),
                       ),
                       const SizedBox(height: 16),
-                      Expanded(
-                        child: IndexedStack(
-                          index: selectedTab,
-                          children: [
-                            _OpenSubScreenCard(
-                              title: 'Students',
-                              subtitle: 'Pending registrations',
-                              buttonText: 'Open',
-                              icon: Icons.person,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const StudentManagement(),
-                                  ),
-                                );
-                              },
-                            ),
-                            _OpenSubScreenCard(
-                              title: 'Teachers',
-                              subtitle: 'Assign groups/courses',
-                              buttonText: 'Open',
-                              icon: Icons.school,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const TeacherManagement(),
-                                  ),
-                                );
-                              },
-                            ),
-                            const _FilesTab(),
-                          ],
-                        ),
-                      ),
+                      // on montre directement l'écran correspondant au tab
+                      Expanded(child: bodyChild),
                     ],
                   ),
                 ),
@@ -163,70 +132,7 @@ class _AdminPanelState extends State<AdminPanel> {
   }
 }
 
-class _OpenSubScreenCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String buttonText;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  const _OpenSubScreenCard({
-    required this.title,
-    required this.subtitle,
-    required this.buttonText,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            )
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 44, color: const Color(0xFF6D28D9)),
-            const SizedBox(height: 10),
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(color: Colors.black54)),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6D28D9),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                ),
-                onPressed: onPressed,
-                child: Text(
-                  buttonText,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TabsPill extends StatelessWidget {
+class _TabsPill extends StatelessWidget {//declarer un widget stateless pour la barre d'onglet
   final int selectedIndex;
   final ValueChanged<int> onChanged;
 
@@ -290,7 +196,7 @@ class _TabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return InkWell(//pour avoir un effet de click
       borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Container(
@@ -305,7 +211,7 @@ class _TabItem extends StatelessWidget {
           boxShadow: selected
               ? [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withOpacity(0.40),
               blurRadius: 18,
               offset: const Offset(0, 8),
             )
@@ -315,7 +221,7 @@ class _TabItem extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: selected ? const Color(0xFF6D28D9) : Colors.black54),
+            Icon(icon, size: 18, color: selected ? const Color(0xFF6D28D9) : Colors.black54),//ida selectionne icon violet else icon gris
             const SizedBox(width: 8),
             Text(
               label,
@@ -331,36 +237,85 @@ class _TabItem extends StatelessWidget {
   }
 }
 
-/// Files tab (Phase 4)
-class _FilesTab extends StatelessWidget {
+class _FilesTab extends StatefulWidget {
   const _FilesTab();
+
+  @override
+  State<_FilesTab> createState() => _FilesTabState();
+}
+
+class _FilesTabState extends State<_FilesTab> {
+  final service = AdminService.instance;//initialiser liste de fichiers vide
+
+  List<Map<String, dynamic>> files = [];
+  bool loading = false;
+  String? errorMsg;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFiles();
+  }
+
+  Future<void> _loadFiles() async {//charge les fichiers
+    setState(() {
+      loading = true;
+      errorMsg = null;
+    });
+
+    try {
+      files = await service.fetchFiles(); // lit la table files
+    } catch (e) {
+      errorMsg = "Erreur lors du chargement des fichiers";
+    }
+
+    if (mounted) setState(() => loading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        if (loading)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: LinearProgressIndicator(minHeight: 3),//affiche une barre de progression lineaire de 3 pixel
+          ),
+        if (errorMsg != null) ...[
+          Text(errorMsg!, style: const TextStyle(color: Colors.red)),
+          const SizedBox(height: 8),
+          ElevatedButton(onPressed: _loadFiles, child: const Text("Retry")),
+          const SizedBox(height: 8),
+        ],//erreur 'Retry'
         Expanded(
-          child: GridView.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 1.7,
-            children: const [
-              _FileCard(name: 'timetable_groupA.png', tag: 'Timetable'),
-              _FileCard(name: 'syllabus', tag: 'Timetable'),
-              _FileCard(name: 'syllabus_BD.pdf', tag: 'Timetable'),
-              _FileCard(name: 'exam_schedule.xlsx', tag: 'Exam'),
-            ],
+          child: files.isEmpty
+              ? const Center(child: Text("No files"))
+              : GridView.builder(//gallary view
+            padding: const EdgeInsets.all(4),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,//2 colonnes
+              mainAxisSpacing: 12,//espace vertical de 12 pixels
+              crossAxisSpacing: 12,//espace horizontal
+              childAspectRatio: 1.7,
+            ),
+            itemCount: files.length,//nombre d'elements=nombre de fichiers
+            itemBuilder: (context, index) {
+              final f = files[index];//recuperer le fiichier a l'index
+              final name = (f['name'] ?? '').toString();//extrait le nom (vide si null)
+              final tag = (f['tag'] ?? '').toString();//extrait le tag (vide si null)
+              return _FileCard(name: name, tag: tag);//retourne une carte de fichier
+            },
           ),
         ),
         const SizedBox(height: 10),
-        InkWell(
+        InkWell(//widget avec effet de clic
           borderRadius: BorderRadius.circular(28),
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(//navigue vers une nouvelle page et attend le retour
               context,
-              MaterialPageRoute(builder: (context) => const FileUploadPage()),
+              MaterialPageRoute(builder: (context) => const FileUploadPage()),// route vers la page d'upload
             );
+            await _loadFiles(); // refresh après upload
           },
           child: Container(
             width: double.infinity,
@@ -429,7 +384,7 @@ class _FileCard extends StatelessWidget {
           )
         ],
       ),
-      child: Column(
+      child: Column(//contenu de file card
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Align(
@@ -443,13 +398,13 @@ class _FileCard extends StatelessWidget {
               child: Text(tag, style: const TextStyle(color: Colors.white, fontSize: 12)),
             ),
           ),
-          const Spacer(),
-          const Icon(Icons.insert_drive_file, color: Colors.black45),
+          const Spacer(),//spacer qui pousse le contenu sivant vers le bas,
+          const Icon(Icons.insert_drive_file, color: Colors.black45),//icone de fichier grise
           const SizedBox(height: 8),
           Text(
             name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 1,//maximum 1 ligne
+            overflow: TextOverflow.ellipsis,//ajoute des point de suspension si trop long
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
         ],

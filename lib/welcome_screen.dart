@@ -7,9 +7,8 @@ class WelcomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color backgroundColor = Color(0xFF8E7CFF); // violet clair
-    const Color buttonColor = Color(0xFF4B2E83);     // violet fonce
-
+    const Color backgroundColor = Color(0xFF8E7CFF); // violet foncé
+    const Color buttonColor = Color(0xFF4B2E83); // violet foncé des boutons
     const Color textColor = Colors.white;
 
     return Scaffold(
@@ -21,7 +20,7 @@ class WelcomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Nom de l’app
+                // Nom de l'app
                 const Text(
                   'Campus Connect',
                   style: TextStyle(
@@ -39,11 +38,8 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-
                 // ici tu pourras mettre une image/illustration plus tard
-
                 const SizedBox(height: 40),
-
                 // bouton LOGIN
                 SizedBox(
                   width: double.infinity,
@@ -73,7 +69,6 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 // bouton SIGN UP
                 SizedBox(
                   width: double.infinity,
@@ -103,36 +98,11 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-
-                // petits ronds réseaux sociaux (optionnels)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    _SocialDot(color: Color(0xFF4267B2)), // FB
-                    SizedBox(width: 12),
-                    _SocialDot(color: Color(0xFFDB4437)), // Google
-                    SizedBox(width: 12),
-                    _SocialDot(color: Color(0xFF1DA1F2)), // autre
-                  ],
-                ),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SocialDot extends StatelessWidget {
-  final Color color;
-  const _SocialDot({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: 6,
-      backgroundColor: color,
     );
   }
 }

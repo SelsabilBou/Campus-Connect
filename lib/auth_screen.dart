@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-
+import 'register_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -45,19 +45,15 @@ class _AuthScreenState extends State<AuthScreen> {
         return;
       }
 
-
-      Widget target;
-      // APRÈS
       if (user.role == 'Admin') {
         Navigator.pushReplacementNamed(context, '/admin');
       } else if (user.role == 'Teacher') {
         Navigator.pushReplacementNamed(context, '/teacher');
       } else if (user.role == 'Student') {
-        Navigator.pushReplacementNamed(context, '/student'); // StudentPortalScreen
+        Navigator.pushReplacementNamed(context, '/student');
       } else {
         Navigator.pushReplacementNamed(context, '/login');
       }
-
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('❌ Wrong email/password or role')),
@@ -177,79 +173,39 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
 
                 const SizedBox(height: 16),
+                // ligne Sign Up cliquable
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       "Don't have an account? ",
                       style: TextStyle(fontSize: 13),
                     ),
-                    Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF4B2E83),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: const [
-                    Expanded(child: Divider()),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        'OR',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    _SocialCircle(
-                      color: Color(0xFF4267B2),
-                      icon: Icons.facebook,
-                    ),
-                    SizedBox(width: 16),
-                    _SocialCircle(
-                      color: Color(0xFFDB4437),
-                      icon: Icons.g_mobiledata,
-                    ),
-                    SizedBox(width: 16),
-                    _SocialCircle(
-                      color: Color(0xFF1DA1F2),
-                      icon: Icons.mail_outline,
-                    ),
-                  ],
-                ),
+
+                // plus de "OR" ni d'icônes sociales
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SocialCircle extends StatelessWidget {
-  final Color color;
-  final IconData icon;
-  const _SocialCircle({required this.color, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: 18,
-      backgroundColor: color,
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 18,
       ),
     );
   }
