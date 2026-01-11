@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'auth_screen.dart';      // page login (celle qu’on a faite)
-import 'register_screen.dart'; // on la fera après
+import 'auth_screen.dart';
+import 'register_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -8,7 +8,7 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color backgroundColor = Color(0xFF8E7CFF); // violet foncé
-    const Color buttonColor = Color(0xFF4B2E83);     // violet clair / beige
+    const Color buttonColor = Color(0xFF4B2E83);     // violet foncé des boutons
     const Color textColor = Colors.white;
 
     return Scaffold(
@@ -102,36 +102,12 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-
-                // petits ronds réseaux sociaux (optionnels)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    _SocialDot(color: Color(0xFF4267B2)), // FB
-                    SizedBox(width: 12),
-                    _SocialDot(color: Color(0xFFDB4437)), // Google
-                    SizedBox(width: 12),
-                    _SocialDot(color: Color(0xFF1DA1F2)), // autre
-                  ],
-                ),
+                // plus de petits points ici
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SocialDot extends StatelessWidget {
-  final Color color;
-  const _SocialDot({required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: 6,
-      backgroundColor: color,
     );
   }
 }

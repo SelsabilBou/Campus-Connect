@@ -1,10 +1,10 @@
-// admin_panal.dart  (Phase 4 + Phase 5 permissions guard)
+// admin_panal.dart (sans bouton Open : les tabs ouvrent directement les écrans)
 import 'package:flutter/material.dart';
 import 'student_management.dart';
 import 'teacher_management.dart';
 import 'file_upload.dart';
 import 'schedule_calender.dart';
-import 'auth_service.dart'; // NEW (Phase 5)
+import 'auth_service.dart';
 
 class AdminPanel extends StatefulWidget {
   const AdminPanel({super.key});
@@ -19,7 +19,7 @@ class _AdminPanelState extends State<AdminPanel> {
   @override
   void initState() {
     super.initState();
-    _guardAdmin(); // Phase 5: restrict to Admin only
+    _guardAdmin();
   }
 
   Future<void> _guardAdmin() async {
@@ -32,14 +32,23 @@ class _AdminPanelState extends State<AdminPanel> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Accès refusé : Admin فقط")),
       );
-
-      // يرجع لصفحة login (routes لازم يكونو في main.dart)
       Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // au lieu de IndexedStack + carte avec bouton Open,
+    // on ouvre directement l'écran selon selectedTab
+    Widget bodyChild;
+    if (selectedTab == 0) {
+      bodyChild = const StudentManagement();
+    } else if (selectedTab == 1) {
+      bodyChild = const TeacherManagement();
+    } else {
+      bodyChild = const _FilesTab();
+    }
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -52,7 +61,7 @@ class _AdminPanelState extends State<AdminPanel> {
         child: SafeArea(
           child: Column(
             children: [
-              // ================== LOGOUT BUTTON (NEW) ==================
+              // logout
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Row(
@@ -80,8 +89,6 @@ class _AdminPanelState extends State<AdminPanel> {
                   ],
                 ),
               ),
-              // =========================================================
-
               const SizedBox(height: 24),
               const Text(
                 'Admin Panel',
@@ -98,7 +105,8 @@ class _AdminPanelState extends State<AdminPanel> {
               ),
               const SizedBox(height: 22),
               Expanded(
-                child: Container(
+                child: Container
+                  (
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                   decoration: const BoxDecoration(
@@ -115,111 +123,14 @@ class _AdminPanelState extends State<AdminPanel> {
                         onChanged: (i) => setState(() => selectedTab = i),
                       ),
                       const SizedBox(height: 16),
-                      Expanded(
-                        child: IndexedStack(
-                          index: selectedTab,
-                          children: [
-                            _OpenSubScreenCard(
-                              title: 'Students',
-                              subtitle: 'Pending registrations',
-                              buttonText: 'Open',
-                              icon: Icons.person,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const StudentManagement(),
-                                  ),
-                                );
-                              },
-                            ),
-                            _OpenSubScreenCard(
-                              title: 'Teachers',
-                              subtitle: 'Assign groups/courses',
-                              buttonText: 'Open',
-                              icon: Icons.school,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const TeacherManagement(),
-                                  ),
-                                );
-                              },
-                            ),
-                            const _FilesTab(),
-                          ],
-                        ),
-                      ),
+                      // ici on montre directement l'écran correspondant au tab
+                      Expanded(child: bodyChild),
                     ],
                   ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OpenSubScreenCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String buttonText;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  const _OpenSubScreenCard({
-    required this.title,
-    required this.subtitle,
-    required this.buttonText,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            )
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 44, color: const Color(0xFF6D28D9)),
-            const SizedBox(height: 10),
-            Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(color: Colors.black54)),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6D28D9),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                ),
-                onPressed: onPressed,
-                child: Text(
-                  buttonText,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -331,7 +242,7 @@ class _TabItem extends StatelessWidget {
   }
 }
 
-/// Files tab (Phase 4)
+/// Files tab reste comme avant
 class _FilesTab extends StatelessWidget {
   const _FilesTab();
 
