@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'auth_screen.dart';      // page login (celle qu’on a faite)
-import 'register_screen.dart'; // on la fera après
+import 'auth_screen.dart';
+import 'register_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    const Color backgroundColor = Color(0xFF8E7CFF); // violet foncé
-    const Color buttonColor = Color(0xFF4B2E83);     // violet clair / beige
+    const Color backgroundColor = Color(0xFF8E7CFF); // violet clair
+    const Color buttonColor = Color(0xFF4B2E83);     // violet fonce
+
     const Color textColor = Colors.white;
 
     return Scaffold(
