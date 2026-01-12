@@ -53,6 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'name': fullNameController.text.trim(),
         'email': emailController.text.trim(),
         'group': groupController.text.trim(),
+        'year': yearController.text.trim(),
         'matricule': matriculeController.text.trim(),
         'password': passwordController.text.trim(),
         'role': 'Student',
