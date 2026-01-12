@@ -19,7 +19,6 @@ class TeacherService {
 
   Map<String, dynamic> _decodeJsonObject(http.Response res) {
     try {
-      // safer with utf8 bytes
       final body = utf8.decode(res.bodyBytes);
       final decoded = jsonDecode(body);
       if (decoded is Map<String, dynamic>) return decoded;
@@ -112,13 +111,13 @@ class TeacherService {
 
     final data = _decodeJsonObject(res);
     if (data["success"] != true) {
-      // Example wanted: "File upload failed"
       throw Exception(data["message"]?.toString() ?? "File upload failed");
     }
 
     return CourseFile(
       id: 0,
-      courseId: int.tryParse((data["course_id"] ?? courseId).toString()) ?? courseId,
+      courseId:
+      int.tryParse((data["course_id"] ?? courseId).toString()) ?? courseId,
       name: data["name"]?.toString() ?? "",
       tag: data["tag"]?.toString() ?? tag,
       path: data["path"]?.toString() ?? "",
@@ -126,6 +125,31 @@ class TeacherService {
     );
   }
 
+  // lecture des fichiers d’un cours (course_files_read.php -> {success,data})
+  Future<List<CourseFile>> fetchCourseFiles(int courseId) async {
+    final uri = Uri.parse(
+      "$baseUrl/course_files_read.php?course_id=$courseId",
+    );
+
+    final res = await http
+        .get(uri, headers: {"Accept": "application/json"})
+        .timeout(_timeout);
+
+    if (res.statusCode != 200) {
+      throw Exception("HTTP ${res.statusCode}: ${utf8.decode(res.bodyBytes)}");
+    }
+
+    final decoded = _decodeJsonObject(res);
+
+    if (decoded["success"] != true) {
+      throw Exception(decoded["message"]?.toString() ?? "Fetch files failed");
+    }
+
+    final list = (decoded["data"] ?? []) as List;
+    return list.map((e) => CourseFile.fromJson(e)).toList();
+  }
+
+  // optionnel: à supprimer si tu n’utilises plus files_read.php
   Future<List<CourseFile>> getCourseFiles(int courseId) async {
     final uri = Uri.parse("$baseUrl/files_read.php?course_id=$courseId");
     final res = await http
@@ -233,7 +257,8 @@ class TeacherService {
 
     final decoded = _decodeJsonObject(res);
     if (decoded["success"] != true) {
-      throw Exception(decoded["message"]?.toString() ?? "Attendance save failed");
+      throw Exception(
+          decoded["message"]?.toString() ?? "Attendance save failed");
     }
   }
 
@@ -256,7 +281,8 @@ class TeacherService {
 
     final decoded = _decodeJsonObject(res);
     if (decoded["success"] != true) {
-      throw Exception(decoded["message"]?.toString() ?? "Fetch attendance failed");
+      throw Exception(
+          decoded["message"]?.toString() ?? "Fetch attendance failed");
     }
 
     final row = decoded["data"];

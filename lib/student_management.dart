@@ -19,7 +19,6 @@ class _StudentManagementState extends State<StudentManagement> {
   bool loading = false;
   String? errorMsg;
 
-  // Phase 5: pagination
   final int _limit = 20;
   int _offset = 0;
   bool _hasMore = true;
@@ -49,7 +48,10 @@ class _StudentManagementState extends State<StudentManagement> {
     });
 
     try {
-      final list = await service.fetchPendingStudents(limit: _limit, offset: _offset);
+      final list = await service.fetchPendingStudents(
+        limit: _limit,
+        offset: _offset,
+      );
 
       if (reset) {
         pendingAll = list;
@@ -57,13 +59,10 @@ class _StudentManagementState extends State<StudentManagement> {
         pendingAll.addAll(list);
       }
 
-      // إذا رجعت أقل من limit => ماكانش pages أخرى
       if (list.length < _limit) _hasMore = false;
 
-      // جهّز الصفحة للعرض حسب search الحالي
       _applyFilter(_searchCtrl.text);
 
-      // update offset للpage الجاية
       _offset = pendingAll.length;
     } catch (e) {
       errorMsg = "Erreur lors du chargement";
@@ -98,7 +97,8 @@ class _StudentManagementState extends State<StudentManagement> {
     }).toList();
 
     return matches
-        .map((s) => "${(s['name'] ?? '').toString()} — ${(s['email'] ?? '').toString()}")
+        .map((s) =>
+    "${(s['name'] ?? '').toString()} — ${(s['email'] ?? '').toString()}")
         .toSet()
         .take(6)
         .toList();
@@ -106,31 +106,72 @@ class _StudentManagementState extends State<StudentManagement> {
 
   Future<void> approve(int id) async {
     setState(() => loading = true);
-    final r = await service.approveStudent(id); // ApiResult
+    final r = await service.approveStudent(id);
     setState(() => loading = false);
 
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(r.success ? "✅ ${r.message}" : "❌ ${r.message}")),
-    ); // [web:225][web:313]
+      SnackBar(
+        content: Text(r.success ? "✅ ${r.message}" : "❌ ${r.message}"),
+      ),
+    );
 
     if (r.success) {
-      // نعاود نحمّل من الأول باش تبان update صحيح
       await loadPending(reset: true);
     }
   }
 
   Future<void> reject(int id) async {
     setState(() => loading = true);
-    final r = await service.rejectStudent(id); // ApiResult
+    final r = await service.rejectStudent(id);
     setState(() => loading = false);
 
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(r.success ? "✅ ${r.message}" : "❌ ${r.message}")),
-    ); // [web:225][web:313]
+      SnackBar(
+        content: Text(r.success ? "✅ ${r.message}" : "❌ ${r.message}"),
+      ),
+    );
+
+    if (r.success) {
+      await loadPending(reset: true);
+    }
+  }
+
+  Future<void> deleteStudent(int id, String name) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete student?'),
+        content: Text('Are you sure you want to delete $name ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => loading = true);
+    final r = await service.deleteStudent(id);
+    setState(() => loading = false);
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(r.success ? "✅ ${r.message}" : "❌ ${r.message}"),
+      ),
+    );
 
     if (r.success) {
       await loadPending(reset: true);
@@ -156,11 +197,13 @@ class _StudentManagementState extends State<StudentManagement> {
                 _searchCtrl.text = selected;
                 setState(() => _applyFilter(selected));
               },
-              fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+              fieldViewBuilder:
+                  (context, controller, focusNode, onFieldSubmitted) {
                 controller.value = _searchCtrl.value;
 
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3F3F6),
                     borderRadius: BorderRadius.circular(26),
@@ -193,7 +236,10 @@ class _StudentManagementState extends State<StudentManagement> {
 
             if (errorMsg != null) ...[
               const SizedBox(height: 10),
-              Text(errorMsg!, style: const TextStyle(color: Colors.red)),
+              Text(
+                errorMsg!,
+                style: const TextStyle(color: Colors.red),
+              ),
               const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () => loadPending(reset: true),
@@ -204,7 +250,8 @@ class _StudentManagementState extends State<StudentManagement> {
             Expanded(
               child: ListView.separated(
                 itemCount: pendingView.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, __) =>
+                const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final s = pendingView[index];
 
@@ -223,22 +270,30 @@ class _StudentManagementState extends State<StudentManagement> {
                     initials: initials.isEmpty ? "?" : initials,
                     name: name,
                     email: email,
-                    onApprove: loading ? () {} : () => approve(id),
-                    onReject: loading ? () {} : () => reject(id),
+                    onApprove:
+                    loading ? () {} : () => approve(id),
+                    onReject:
+                    loading ? () {} : () => reject(id),
+                    onDelete: loading
+                        ? () {}
+                        : () => deleteStudent(id, name),
                   );
                 },
               ),
             ),
 
-            // Phase 5: Load more (simple)
             if (!filtering && _hasMore) ...[
               const SizedBox(height: 10),
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: loading ? null : () => loadPending(reset: false),
-                  child: Text(loading ? "Loading..." : "Load more"),
+                  onPressed: loading
+                      ? null
+                      : () => loadPending(reset: false),
+                  child: Text(
+                    loading ? "Loading..." : "Load more",
+                  ),
                 ),
               ),
             ],
@@ -255,6 +310,7 @@ class _UserCard extends StatelessWidget {
   final String email;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final VoidCallback onDelete;
 
   const _UserCard({
     required this.initials,
@@ -262,6 +318,7 @@ class _UserCard extends StatelessWidget {
     required this.email,
     required this.onApprove,
     required this.onReject,
+    required this.onDelete,
   });
 
   @override
@@ -279,47 +336,122 @@ class _UserCard extends StatelessWidget {
           )
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: const Color(0xFFEDE7FF),
-            child: Text(initials, style: const TextStyle(fontWeight: FontWeight.w800)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 2),
-                Text(email, style: const TextStyle(color: Colors.black54)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          SizedBox(
-            height: 38,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6D28D9),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: const Color(0xFFEDE7FF),
+                child: Text(
+                  initials,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
-              onPressed: onApprove,
-              child: const Text('Approve', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          SizedBox(
-            height: 38,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF6D28D9), width: 2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                  CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      email,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              onPressed: onReject,
-              child: const Text('Reject', style: TextStyle(fontWeight: FontWeight.w700)),
-            ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              SizedBox(
+                height: 38,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                    const Color(0xFF6D28D9),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(22),
+                    ),
+                  ),
+                  onPressed: onApprove,
+                  child: const Text(
+                    'Approve',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 38,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(
+                      color: Color(0xFF6D28D9),
+                      width: 2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(22),
+                    ),
+                  ),
+                  onPressed: onReject,
+                  child: const Text(
+                    'Reject',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 38,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(
+                      color: Colors.red,
+                      width: 2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                      BorderRadius.circular(22),
+                    ),
+                  ),
+                  onPressed: onDelete,
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

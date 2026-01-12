@@ -31,11 +31,13 @@ class _CourseFilesScreenState extends State<CourseFilesScreen> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      _files = await service.getCourseFiles(widget.courseId);
+      // utiliser la nouvelle méthode qui gère la liste JSON
+      _files = await service.fetchCourseFiles(widget.courseId);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Load files failed: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Load files failed: $e")),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -54,13 +56,16 @@ class _CourseFilesScreenState extends State<CourseFilesScreen> {
                 : ListView.separated(
               padding: const EdgeInsets.all(12),
               itemCount: _files.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, __) =>
+              const SizedBox(height: 10),
               itemBuilder: (_, i) {
                 final f = _files[i];
                 return ListTile(
                   title: Text(f.name),
                   subtitle: Text(
-                    f.tag.isEmpty ? f.path : "${f.tag} • ${f.path}",
+                    f.tag.isEmpty
+                        ? f.path
+                        : "${f.tag} • ${f.path}",
                   ),
                 );
               },

@@ -15,12 +15,12 @@ class CourseFile {
     required this.createdAt,
   });
 
-  static int _toInt(dynamic v, {int fallback = 0}) {
+  static int _toInt(dynamic v, {int fallback = 0}) {//convertir to int
     if (v == null) return fallback;
     return int.tryParse(v.toString()) ?? fallback;
   }
 
-  factory CourseFile.fromJson(Map<String, dynamic> json) {
+  factory CourseFile.fromJson(Map<String, dynamic> json) {//construire une instance dr coursefile
     return CourseFile(
       id: _toInt(json["id"]),
       courseId: _toInt(json["course_id"]),
@@ -31,7 +31,7 @@ class CourseFile {
     );
   }
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() => {//transfer lobject dart to json
     "id": id,
     "course_id": courseId,
     "name": name,
@@ -40,8 +40,7 @@ class CourseFile {
     "created_at": createdAt,
   };
 
-  // مفيد لـ http.post (body غالبا لازم تكون String,String)
-  Map<String, String> toPostFields() => {
+  Map<String, String> toPostFields() => {//preparer lobject pour envoyer dans HTTP
     "id": id.toString(),
     "course_id": courseId.toString(),
     "name": name,

@@ -3,7 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'student_portal.dart';
 import 'auth_screen.dart';
 import 'home_screen.dart';
-import 'admin_panal.dart';
+import 'admin.dart';
 import 'register_screen.dart';
 import 'welcome_screen.dart'; // <— importe ta page welcome
 import 'teacher_dashboard.dart';

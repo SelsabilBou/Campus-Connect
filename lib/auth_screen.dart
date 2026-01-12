@@ -1,3 +1,4 @@
+//lecran de login
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import 'register_screen.dart';
@@ -10,12 +11,12 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  String selectedRole = 'Admin'; // valeur par défaut
+  final TextEditingController emailController = TextEditingController();//ye9ra l email
+  final TextEditingController passwordController = TextEditingController();//ye9ra l passwd
+  String selectedRole = 'Admin';
 
   @override
-  void dispose() {
+  void dispose() {//nettoyer les controllers
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -24,7 +25,7 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _onLogin() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
-
+    //recupére les valeurs dans les champs
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter email and password')),
@@ -32,31 +33,31 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
 
-    final success = await AuthService.login(email, password, selectedRole);
+    final success = await AuthService.login(email, password, selectedRole);//appele de la methode login
 
-    if (!mounted) return;
+    if (!mounted) return;//ma bedelnach la page
 
     if (success) {
-      final user = await AuthService.getLoggedInUser();
-      if (user == null) {
+      final user = await AuthService.getLoggedInUser();//recupere lutilisateur cnct
+      if (user == null) {//makanch user
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Login error, user not found')),
         );
         return;
       }
 
-      if (user.role == 'Admin') {
+      if (user.role == 'Admin') {//navigue vers admin
         Navigator.pushReplacementNamed(context, '/admin');
-      } else if (user.role == 'Teacher') {
+      } else if (user.role == 'Teacher') {//vers teacher
         Navigator.pushReplacementNamed(context, '/teacher');
-      } else if (user.role == 'Student') {
+      } else if (user.role == 'Student') {//vers student
         Navigator.pushReplacementNamed(context, '/student');
       } else {
         Navigator.pushReplacementNamed(context, '/login');
       }
-    } else {
+    } else {//login est !succes
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Wrong email/password or role')),
+        const SnackBar(content: Text('Wrong email/password or role')),
       );
     }
   }
@@ -70,7 +71,7 @@ class _AuthScreenState extends State<AuthScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: Center(
-        child: SingleChildScrollView(
+        child: SingleChildScrollView(//permet de scroller si lecran est petit
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             padding: const EdgeInsets.all(24),
@@ -86,13 +87,13 @@ class _AuthScreenState extends State<AuthScreen> {
               ],
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.min,//yehkem ghir la taille li yahtage
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Align(
+                Align(//plaser bouton en haut a gauche
                   alignment: Alignment.centerLeft,
                   child: IconButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
+                    onPressed: () => Navigator.of(context).maybePop(),//revenir a lecran précédent
                     icon: const Icon(Icons.arrow_back),
                   ),
                 ),
@@ -105,7 +106,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                TextFormField(
+                TextFormField(//champ de saisire de lemail
                   controller: emailController,
                   decoration: InputDecoration(
                     labelText: 'Username or Email',
@@ -117,9 +118,9 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                TextFormField(
+                TextFormField(//champ de saisre de passwd
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: true,//masque le passwd
                   decoration: InputDecoration(
                     labelText: 'Password',
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -130,7 +131,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                DropdownButtonFormField<String>(
+                DropdownButtonFormField<String>(//champ avec menu déroulant
                   value: selectedRole,
                   decoration: InputDecoration(
                     labelText: 'Role',
@@ -138,12 +139,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  items: const [
+                  items: const [//les option
                     DropdownMenuItem(value: 'Admin', child: Text('Admin')),
                     DropdownMenuItem(value: 'Teacher', child: Text('Teacher')),
                     DropdownMenuItem(value: 'Student', child: Text('Student')),
                   ],
-                  onChanged: (value) {
+                  onChanged: (value) {//ki yebedel le role nedirou met a jour l stat
                     if (value != null) {
                       setState(() => selectedRole = value);
                     }
@@ -173,7 +174,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
 
                 const SizedBox(height: 16),
-                // ligne Sign Up cliquable
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -181,7 +182,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       "Don't have an account? ",
                       style: TextStyle(fontSize: 13),
                     ),
-                    GestureDetector(
+                    GestureDetector(//tered singUp cliquable
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
@@ -200,8 +201,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ],
                 ),
-
-                // plus de "OR" ni d'icônes sociales
               ],
             ),
           ),
