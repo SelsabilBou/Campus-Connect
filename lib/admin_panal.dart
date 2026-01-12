@@ -1,4 +1,3 @@
-// admin_panal.dart (sans bouton Open : les tabs ouvrent directement les écrans)
 import 'package:flutter/material.dart';
 import 'student_management.dart';
 import 'teacher_management.dart';
