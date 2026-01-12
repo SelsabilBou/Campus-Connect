@@ -140,44 +140,6 @@ class _StudentManagementState extends State<StudentManagement> {
     }
   }
 
-  Future<void> deleteStudent(int id, String name) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete student?'),
-        content: Text('Are you sure you want to delete $name ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() => loading = true);
-    final r = await service.deleteStudent(id);
-    setState(() => loading = false);
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(r.success ? "✅ ${r.message}" : "❌ ${r.message}"),
-      ),
-    );
-
-    if (r.success) {
-      await loadPending(reset: true);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final bool filtering = _searchCtrl.text.trim().isNotEmpty;
@@ -202,8 +164,7 @@ class _StudentManagementState extends State<StudentManagement> {
                 controller.value = _searchCtrl.value;
 
                 return Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3F3F6),
                     borderRadius: BorderRadius.circular(26),
@@ -250,8 +211,7 @@ class _StudentManagementState extends State<StudentManagement> {
             Expanded(
               child: ListView.separated(
                 itemCount: pendingView.length,
-                separatorBuilder: (_, __) =>
-                const SizedBox(height: 12),
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final s = pendingView[index];
 
@@ -270,13 +230,8 @@ class _StudentManagementState extends State<StudentManagement> {
                     initials: initials.isEmpty ? "?" : initials,
                     name: name,
                     email: email,
-                    onApprove:
-                    loading ? () {} : () => approve(id),
-                    onReject:
-                    loading ? () {} : () => reject(id),
-                    onDelete: loading
-                        ? () {}
-                        : () => deleteStudent(id, name),
+                    onApprove: loading ? () {} : () => approve(id),
+                    onReject: loading ? () {} : () => reject(id),
                   );
                 },
               ),
@@ -288,9 +243,8 @@ class _StudentManagementState extends State<StudentManagement> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: loading
-                      ? null
-                      : () => loadPending(reset: false),
+                  onPressed:
+                  loading ? null : () => loadPending(reset: false),
                   child: Text(
                     loading ? "Loading..." : "Load more",
                   ),
@@ -310,7 +264,6 @@ class _UserCard extends StatelessWidget {
   final String email;
   final VoidCallback onApprove;
   final VoidCallback onReject;
-  final VoidCallback onDelete;
 
   const _UserCard({
     required this.initials,
@@ -318,7 +271,6 @@ class _UserCard extends StatelessWidget {
     required this.email,
     required this.onApprove,
     required this.onReject,
-    required this.onDelete,
   });
 
   @override
@@ -354,8 +306,7 @@ class _UserCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       name,
@@ -389,11 +340,10 @@ class _UserCard extends StatelessWidget {
                 height: 38,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                    const Color(0xFF6D28D9),
+                    backgroundColor: const Color(0xFF6D28D9),
+                    minimumSize: const Size(110, 38), // même largeur min
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(22),
                     ),
                   ),
                   onPressed: onApprove,
@@ -410,13 +360,13 @@ class _UserCard extends StatelessWidget {
                 height: 38,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(110, 38),
                     side: const BorderSide(
                       color: Color(0xFF6D28D9),
                       width: 2,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(22),
                     ),
                   ),
                   onPressed: onReject,
@@ -424,29 +374,7 @@ class _UserCard extends StatelessWidget {
                     'Reject',
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(
-                height: 38,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                      color: Colors.red,
-                      width: 2,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                      BorderRadius.circular(22),
-                    ),
-                  ),
-                  onPressed: onDelete,
-                  child: const Text(
-                    'Delete',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w700,
-                      color: Colors.red,
+                      color: Color(0xFF6D28D9),
                     ),
                   ),
                 ),
