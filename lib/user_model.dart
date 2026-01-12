@@ -4,31 +4,30 @@ class UserModel {
   final String email;
   final String role;
   final String status;
-  final String group; // grp de la BD, peut être vide
-
-  // Phase 5 (Teacher auth)
-  final String? apiKey; // <-- ADD (teacher only)
+  final String grp; // ✅ Renommé de 'group' en 'grp' pour correspondre à la BD
+  final String? year; // ✅ Ajouté le champ year
+  final String? apiKey; // Pour les teachers
 
   UserModel({
     required this.id,
     required this.name,
     required this.email,
     required this.role,
-    required this.status,
-    required this.group,
+    this.status = 'active', // ✅ Valeur par défaut
+    this.grp = '', // ✅ Valeur par défaut
+    this.year, // ✅ Optionnel
     this.apiKey,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: int.parse(json['id'].toString()),
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       name: json['name']?.toString() ?? '',
       email: json['email']?.toString() ?? '',
       role: json['role']?.toString() ?? '',
-      status: json['status']?.toString() ?? '',
-      group: (json['grp'] ?? json['group'] ?? '').toString(),
-
-      // Phase 5
+      status: json['status']?.toString() ?? 'active',
+      grp: (json['grp'] ?? json['group'] ?? '').toString(),
+      year: json['year']?.toString(), // ✅ Récupère year depuis JSON
       apiKey: json['api_key']?.toString(),
     );
   }
@@ -39,9 +38,8 @@ class UserModel {
     'email': email,
     'role': role,
     'status': status,
-    'group': group,
-
-    // Phase 5
+    'grp': grp, // ✅ Utilise 'grp' au lieu de 'group'
+    'year': year, // ✅ Inclut year dans le JSON
     'api_key': apiKey,
   };
 }

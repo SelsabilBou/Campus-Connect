@@ -41,7 +41,7 @@ class _ScheduleViewState extends State<ScheduleView> {
 
     try {
       final user = await AuthService.getLoggedInUser();
-      if (user == null || user.group.isEmpty) {
+      if (user == null || user.grp.isEmpty) {
         if (!mounted) return;
         setState(() {
           _allItems = [];
@@ -51,7 +51,7 @@ class _ScheduleViewState extends State<ScheduleView> {
         return;
       }
 
-      final data = await _service.viewSchedule(user.group);
+      final data = await _service.viewSchedule(user.grp);
       if (!mounted) return;
       setState(() {
         _allItems = data;

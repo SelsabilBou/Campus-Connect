@@ -276,7 +276,7 @@ class _ProfileViewDummyState extends State<_ProfileViewDummy> {
       if (!mounted) return;
       setState(() => _user = u);
 
-      if (u == null || u.group.isEmpty) {
+      if (u == null || u.grp.isEmpty) {
         setState(() {
           _events = [];
           _eventsError = null;
@@ -285,7 +285,7 @@ class _ProfileViewDummyState extends State<_ProfileViewDummy> {
         return;
       }
 
-      final data = await EventService.instance.fetchEventsForGroup(u.group);
+      final data = await EventService.instance.fetchEventsForGroup(u.grp);
       if (!mounted) return;
       setState(() {
         _events = data;
@@ -349,7 +349,7 @@ class _ProfileViewDummyState extends State<_ProfileViewDummy> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text('Group: ${u?.group ?? 'L2 - ?'}'),
+                    Text('Group: ${u?.grp ?? 'L2 - ?'}'),
                     Text(
                       'Email: ${u?.email ?? 'student@example.com'}',
                       overflow: TextOverflow.ellipsis,
@@ -516,7 +516,7 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
 
     try {
       final user = await AuthService.getLoggedInUser();
-      final groupKey = user?.group ?? '';
+      final groupKey = user?.grp ?? '';
 
       if (groupKey.isEmpty) {
         if (!mounted) return;
