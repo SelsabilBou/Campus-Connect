@@ -5,9 +5,7 @@ import 'student_service.dart';
 import 'file_model.dart';
 import 'auth_service.dart';
 import 'user_model.dart';
-import 'chat_screen.dart'; // 👈 NEW
-import 'event_service.dart';
-import 'event_model.dart';
+import 'profile_card.dart';
 
 class StudentPortalScreen extends StatefulWidget {
   const StudentPortalScreen({super.key});
@@ -17,13 +15,12 @@ class StudentPortalScreen extends StatefulWidget {
 }
 
 class _StudentPortalScreenState extends State<StudentPortalScreen> {
-  int _selectedTab = 0; // 0 Profile, 1 Schedule, 2 Marks, 3 Files
+  int _selectedTab = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // même style que AdminPanel
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -34,7 +31,6 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // ================== LOGOUT BUTTON (NEW) ==================
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Row(
@@ -62,8 +58,6 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
                   ],
                 ),
               ),
-              // =========================================================
-
               const SizedBox(height: 24),
               const Text(
                 'Student Panel',
@@ -101,7 +95,7 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
                         child: IndexedStack(
                           index: _selectedTab,
                           children: const [
-                            _ProfileViewDummy(),
+                            ProfileCard(), // ✅ Utilise ProfileCard
                             ScheduleView(),
                             MarksView(),
                             _FilesDummyView(),
@@ -120,8 +114,7 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
   }
 }
 
-// ---------- Tabs pill (même logique que AdminPanel) ----------
-
+// ---------- Tabs pill ----------
 class _TabsPill extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onChanged;
@@ -249,218 +242,7 @@ class _TabItem extends StatelessWidget {
   }
 }
 
-// ---------- Profile (avec bouton Chat) ----------
-
-class _ProfileViewDummy extends StatefulWidget {
-  const _ProfileViewDummy();
-
-  @override
-  State<_ProfileViewDummy> createState() => _ProfileViewDummyState();
-}
-
-class _ProfileViewDummyState extends State<_ProfileViewDummy> {
-  UserModel? _user;
-  List<EventModel> _events = [];
-  bool _loadingEvents = true;
-  String? _eventsError;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserAndEvents();
-  }
-
-  Future<void> _loadUserAndEvents() async {
-    try {
-      final u = await AuthService.getLoggedInUser();
-      if (!mounted) return;
-      setState(() => _user = u);
-
-      if (u == null || u.group.isEmpty) {
-        setState(() {
-          _events = [];
-          _eventsError = null;
-          _loadingEvents = false;
-        });
-        return;
-      }
-
-      final data = await EventService.instance.fetchEventsForGroup(u.group);
-      if (!mounted) return;
-      setState(() {
-        _events = data;
-        _eventsError = null;
-        _loadingEvents = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _events = [];
-        _eventsError = 'Failed to load events: $e';
-        _loadingEvents = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final u = _user;
-
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // ----- Card profil -----
-        Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
-              )
-            ],
-          ),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: const Color(0xFFEDE7FF),
-                child: Text(
-                  (u?.name.isNotEmpty ?? false)
-                      ? u!.name.substring(0, 2).toUpperCase()
-                      : 'ST',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      u?.name ?? 'Student Name',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text('Group: ${u?.group ?? 'L2 - ?'}'),
-                    Text(
-                      'Email: ${u?.email ?? 'student@example.com'}',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 20),
-        const Text(
-          'Today',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-        const SizedBox(height: 10),
-
-        // ----- Events / Exams -----
-        if (_loadingEvents)
-          const Center(child: CircularProgressIndicator())
-        else if (_eventsError != null)
-          Text(
-            _eventsError!,
-            style: const TextStyle(color: Colors.red),
-          )
-        else if (_events.isEmpty)
-            const Text(
-              'No events for today. Backend integration in progress.',
-              style: TextStyle(color: Colors.black54),
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: _events.map((e) {
-                final dateStr =
-                    '${e.eventDate.year}-${e.eventDate.month.toString().padLeft(2, '0')}-${e.eventDate.day.toString().padLeft(2, '0')} '
-                    '${e.eventDate.hour.toString().padLeft(2, '0')}:${e.eventDate.minute.toString().padLeft(2, '0')}';
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      )
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        e.title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        dateStr,
-                        style: const TextStyle(
-                          color: Colors.black54,
-                          fontSize: 12,
-                        ),
-                      ),
-                      if (e.description.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          e.description,
-                          style: const TextStyle(color: Colors.black87),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-
-        const SizedBox(height: 20),
-
-        // ----- Bouton chat (si tu l’as gardé) -----
-        ElevatedButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ChatScreen(
-                  otherUserId: 5,
-                  otherUserName: 'Samir',
-                ),
-              ),
-            );
-          },
-          icon: const Icon(Icons.chat_bubble_outline),
-          label: const Text('Open chat with Samir'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF6D28D9),
-            foregroundColor: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 // ---------- Files avec Search ----------
-
 class _FilesDummyView extends StatefulWidget {
   const _FilesDummyView();
 
@@ -516,7 +298,7 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
 
     try {
       final user = await AuthService.getLoggedInUser();
-      final groupKey = user?.group ?? '';
+      final groupKey = user?.grp ?? '';
 
       if (groupKey.isEmpty) {
         if (!mounted) return;
@@ -670,8 +452,7 @@ class _FilesDummyViewState extends State<_FilesDummyView> {
                     const SizedBox(width: 8),
                     Text(
                       f.tag,
-                      style:
-                      const TextStyle(color: Colors.black54),
+                      style: const TextStyle(color: Colors.black54),
                     ),
                   ],
                 ),

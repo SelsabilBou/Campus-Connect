@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:http/http.dart' as http;
-
 import 'auth_service.dart';
 import 'attendance_model.dart';
 import 'course_file_model.dart';
@@ -40,12 +38,17 @@ class TeacherService {
     };
   }
 
-  // ---------------- COURSES ----------------
+  // ✅ CORRECTION: Utiliser teacher_courses_read.php avec authentification
   Future<List<CourseModel>> fetchCourses() async {
-    final uri = Uri.parse("$baseUrl/courses_read.php");
-    final res = await http
-        .get(uri, headers: {"Accept": "application/json"})
-        .timeout(_timeout);
+    final uri = Uri.parse("$baseUrl/teacher_courses_read.php");
+    final auth = await _teacherAuthBody();
+
+    // ✅ Envoyer en POST avec les credentials
+    final res = await http.post(
+      uri,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(auth),
+    ).timeout(_timeout);
 
     if (res.statusCode != 200) {
       throw Exception("HTTP ${res.statusCode}: ${utf8.decode(res.bodyBytes)}");
@@ -56,7 +59,8 @@ class TeacherService {
       throw Exception(decoded["message"]?.toString() ?? "Fetch courses failed");
     }
 
-    final list = (decoded["data"] ?? []) as List;
+    // ✅ Chercher 'courses' au lieu de 'data'
+    final list = (decoded["courses"] ?? []) as List;
     return list.map((e) => CourseModel.fromJson(e)).toList();
   }
 

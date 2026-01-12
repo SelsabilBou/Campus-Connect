@@ -8,7 +8,7 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color backgroundColor = Color(0xFF8E7CFF); // violet foncé
-    const Color buttonColor = Color(0xFF4B2E83);     // violet foncé des boutons
+    const Color buttonColor = Color(0xFF4B2E83); // violet foncé des boutons
     const Color textColor = Colors.white;
 
     return Scaffold(
@@ -20,7 +20,7 @@ class WelcomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Nom de l’app
+                // Nom de l'app
                 const Text(
                   'Campus Connect',
                   style: TextStyle(
@@ -38,11 +38,8 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-
                 // ici tu pourras mettre une image/illustration plus tard
-
                 const SizedBox(height: 40),
-
                 // bouton LOGIN
                 SizedBox(
                   width: double.infinity,
@@ -72,7 +69,6 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-
                 // bouton SIGN UP
                 SizedBox(
                   width: double.infinity,
@@ -102,7 +98,6 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-                // plus de petits points ici
               ],
             ),
           ),

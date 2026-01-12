@@ -1,12 +1,10 @@
+// admin_panal.dart (sans bouton Open : les tabs ouvrent directement les écrans)
 import 'package:flutter/material.dart';
 import 'student_management.dart';
 import 'teacher_management.dart';
 import 'file_upload.dart';
 import 'schedule_calender.dart';
 import 'auth_service.dart';
-import 'admin_service.dart';
-import 'teacher_course_assign_screen.dart'; // assigner cours -> teacher
-import 'group_course_assign_screen.dart';   // assigner cours -> groupe
 
 class AdminPanel extends StatefulWidget {
   const AdminPanel({super.key});
@@ -40,6 +38,8 @@ class _AdminPanelState extends State<AdminPanel> {
 
   @override
   Widget build(BuildContext context) {
+    // au lieu de IndexedStack + carte avec bouton Open,
+    // on ouvre directement l'écran selon selectedTab
     Widget bodyChild;
     if (selectedTab == 0) {
       bodyChild = const StudentManagement();
@@ -63,8 +63,7 @@ class _AdminPanelState extends State<AdminPanel> {
             children: [
               // logout
               Padding(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -90,21 +89,26 @@ class _AdminPanelState extends State<AdminPanel> {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 24),
               const Text(
-                'Admin ',
+                'Admin Panel',
                 style: TextStyle(
                   fontSize: 44,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 6),
+              const Text(
+                'Manage campus data',
+                style: TextStyle(fontSize: 18, color: Colors.white70),
+              ),
+              const SizedBox(height: 22),
               Expanded(
-                child: Container(
+                child: Container
+                  (
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
@@ -116,86 +120,10 @@ class _AdminPanelState extends State<AdminPanel> {
                     children: [
                       _TabsPill(
                         selectedIndex: selectedTab,
-                        onChanged: (i) =>
-                            setState(() => selectedTab = i),
+                        onChanged: (i) => setState(() => selectedTab = i),
                       ),
                       const SizedBox(height: 16),
-
-                      // bouton pour assigner cours -> groupe (onglet Students)
-                      if (selectedTab == 0) ...[
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6D28D9),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                  const GroupCourseAssignScreen(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.menu_book,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            label: const Text(
-                              'Assign course to group',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-
-                      // bouton pour assigner cours -> teacher (onglet Teachers)
-                      if (selectedTab == 1) ...[
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6D28D9),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                  const TeacherCourseAssignScreen(),
-                                ),
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.menu_book,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                            label: const Text(
-                              'Assign course',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                      ],
-
-                      // contenu de l’onglet
+                      // ici on montre directement l'écran correspondant au tab
                       Expanded(child: bodyChild),
                     ],
                   ),
@@ -282,15 +210,13 @@ class _TabItem extends StatelessWidget {
           color: selected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: selected
-                ? const Color(0xFF6D28D9)
-                : Colors.transparent,
+            color: selected ? const Color(0xFF6D28D9) : Colors.transparent,
             width: 2,
           ),
           boxShadow: selected
               ? [
             BoxShadow(
-              color: Colors.black.withOpacity(0.40),
+              color: Colors.black.withOpacity(0.06),
               blurRadius: 18,
               offset: const Offset(0, 8),
             )
@@ -300,20 +226,13 @@ class _TabItem extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: selected
-                  ? const Color(0xFF6D28D9)
-                  : Colors.black54,
-            ),
+            Icon(icon, size: 18, color: selected ? const Color(0xFF6D28D9) : Colors.black54),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color:
-                selected ? Colors.black : Colors.black54,
+                color: selected ? Colors.black : Colors.black54,
               ),
             ),
           ],
@@ -323,97 +242,36 @@ class _TabItem extends StatelessWidget {
   }
 }
 
-class _FilesTab extends StatefulWidget {
+/// Files tab reste comme avant
+class _FilesTab extends StatelessWidget {
   const _FilesTab();
-
-  @override
-  State<_FilesTab> createState() => _FilesTabState();
-}
-
-class _FilesTabState extends State<_FilesTab> {
-  final service = AdminService.instance;
-
-  List<Map<String, dynamic>> files = [];
-  bool loading = false;
-  String? errorMsg;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFiles();
-  }
-
-  Future<void> _loadFiles() async {
-    setState(() {
-      loading = true;
-      errorMsg = null;
-    });
-
-    try {
-      files = await service.fetchFiles();
-    } catch (e) {
-      errorMsg = "Erreur lors du chargement des fichiers";
-    }
-
-    if (mounted) setState(() => loading = false);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (loading)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 8),
-            child: LinearProgressIndicator(minHeight: 3),
-          ),
-
-        if (errorMsg != null) ...[
-          Text(
-            errorMsg!,
-            style: const TextStyle(color: Colors.red),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: _loadFiles,
-            child: const Text("Retry"),
-          ),
-          const SizedBox(height: 8),
-        ],
-
         Expanded(
-          child: files.isEmpty
-              ? const Center(child: Text("No files"))
-              : GridView.builder(
-            padding: const EdgeInsets.all(4),
-            gridDelegate:
-            const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.7,
-            ),
-            itemCount: files.length,
-            itemBuilder: (context, index) {
-              final f = files[index];
-              final name = (f['name'] ?? '').toString();
-              final tag = (f['tag'] ?? '').toString();
-              return _FileCard(name: name, tag: tag);
-            },
+          child: GridView.count(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.7,
+            children: const [
+              _FileCard(name: 'timetable_groupA.png', tag: 'Timetable'),
+              _FileCard(name: 'syllabus', tag: 'Timetable'),
+              _FileCard(name: 'syllabus_BD.pdf', tag: 'Timetable'),
+              _FileCard(name: 'exam_schedule.xlsx', tag: 'Exam'),
+            ],
           ),
         ),
-
         const SizedBox(height: 10),
         InkWell(
           borderRadius: BorderRadius.circular(28),
-          onTap: () async {
-            await Navigator.push(
+          onTap: () {
+            Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const FileUploadPage(),
-              ),
+              MaterialPageRoute(builder: (context) => const FileUploadPage()),
             );
-            await _loadFiles();
           },
           child: Container(
             width: double.infinity,
@@ -425,11 +283,7 @@ class _FilesTabState extends State<_FilesTab> {
             child: const Center(
               child: Text(
                 'Upload',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
               ),
             ),
           ),
@@ -440,10 +294,7 @@ class _FilesTabState extends State<_FilesTab> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) =>
-                const ScheduleCalendarPage(),
-              ),
+              MaterialPageRoute(builder: (context) => const ScheduleCalendarPage()),
             );
           },
           child: Container(
@@ -456,20 +307,13 @@ class _FilesTabState extends State<_FilesTab> {
             child: const Center(
               child: Text(
                 'Calendar',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
               ),
             ),
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
-          'Files + Calendar',
-          style: TextStyle(color: Colors.black45),
-        ),
+        const Text('Files + Calendar', style: TextStyle(color: Colors.black45)),
       ],
     );
   }
@@ -502,24 +346,16 @@ class _FileCard extends StatelessWidget {
           Align(
             alignment: Alignment.topRight,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: const Color(0xFF6D28D9),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                tag,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                ),
-              ),
+              child: Text(tag, style: const TextStyle(color: Colors.white, fontSize: 12)),
             ),
           ),
           const Spacer(),
-          const Icon(Icons.insert_drive_file,
-              color: Colors.black45),
+          const Icon(Icons.insert_drive_file, color: Colors.black45),
           const SizedBox(height: 8),
           Text(
             name,

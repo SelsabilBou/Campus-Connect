@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'teacher_service.dart';
 import 'course_model.dart';
 import 'student_model.dart';
-
-// Phase 4: Calendar screen
 import 'attendance_calendar_screen.dart';
-
-import 'teacher_dashboard.dart'; // <-- ADD
+import 'teacher_dashboard.dart';
 
 class AttendanceScreen extends StatefulWidget {
   const AttendanceScreen({super.key});
