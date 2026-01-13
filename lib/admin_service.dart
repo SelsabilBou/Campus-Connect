@@ -256,6 +256,11 @@ class AdminService {
     }
   }
 
+  // ✅ AJOUTÉ: méthode manquante pour teacher_management.dart
+  Future<List<Map<String, dynamic>>> fetchAvailableGroups() async {
+    return await fetchGroupsRaw();
+  }
+
   Future<List<CourseModel>> fetchCourses() async {
     try {
       final res = await http.get(_u('courses_read.php')).timeout(_timeout);
