@@ -72,7 +72,6 @@ class _ProfileCardState extends State<ProfileCard> {
   @override
   Widget build(BuildContext context) {
     const purple = Color(0xFF8E7CFF);
-    const lightPurple = Color(0xFFF3F0FF);
 
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -355,27 +354,6 @@ class _ProfileCardState extends State<ProfileCard> {
                 ],
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            // Quick Stats
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: lightPurple,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatItem('Courses', '5', Icons.book_outlined),
-                  Container(width: 1, height: 40, color: Colors.grey[300]),
-                  _buildStatItem('Attendance', '85%', Icons.check_circle_outline),
-                  Container(width: 1, height: 40, color: Colors.grey[300]),
-                  _buildStatItem('Average', '15.5', Icons.star_outline),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -426,31 +404,6 @@ class _ProfileCardState extends State<ProfileCard> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, color: const Color(0xFF6A3DE8), size: 24),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF6A3DE8),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
     );
   }
 }
