@@ -23,7 +23,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
   bool _loading = false;
   List<CourseModel> _courses = [];
 
-  // ---- SEARCH (Phase 4) ----
+  // ---- SEARCH ----
   final TextEditingController _searchCtrl = TextEditingController();
   Timer? _debounce;
   String _query = "";
@@ -34,7 +34,7 @@ class _CourseListScreenState extends State<CourseListScreen> {
 
     return _courses.where((c) {
       final title = c.title.toLowerCase();
-      final idStr = c.id.toString().toLowerCase(); // FIX: id can be int/string
+      final idStr = c.id.toString().toLowerCase();
       return title.contains(q) || idStr.contains(q);
     }).toList();
   }
@@ -71,7 +71,8 @@ class _CourseListScreenState extends State<CourseListScreen> {
     setState(() => _loading = true);
 
     try {
-      final res = await service.fetchCourses();
+      // Ne récupère que les cours du teacher connecté
+      final res = await service.fetchMyCourses();
       if (!mounted) return;
       setState(() => _courses = res);
     } catch (e) {
@@ -108,8 +109,13 @@ class _CourseListScreenState extends State<CourseListScreen> {
               ),
               filled: true,
               fillColor: const Color(0xFFF7F5FF),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(999)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(999),
                 borderSide: const BorderSide(color: Color(0xFFE6DEFF)),
@@ -138,15 +144,15 @@ class _CourseListScreenState extends State<CourseListScreen> {
             child: ListView.separated(
               padding: const EdgeInsets.only(bottom: 10),
               itemCount: list.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, __) =>
+              const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final c = list[index];
-                final courseId = int.tryParse(c.id.toString()) ?? 0;
+                final courseId =
+                    int.tryParse(c.id.toString()) ?? 0;
                 return _CourseCard(
                   courseId: courseId,
                   name: c.title,
-                  group: "—",
-                  schedule: "—",
                 );
               },
             ),
@@ -160,14 +166,10 @@ class _CourseListScreenState extends State<CourseListScreen> {
 class _CourseCard extends StatefulWidget {
   final int courseId;
   final String name;
-  final String group;
-  final String schedule;
 
   const _CourseCard({
     required this.courseId,
     required this.name,
-    required this.group,
-    required this.schedule,
   });
 
   @override
@@ -210,7 +212,6 @@ class _CourseCardState extends State<_CourseCard> {
 
       _showSnack("Uploaded: ${uploaded.name}");
     } catch (e) {
-      // backend message مثال: "File upload failed" / "Forbidden..." / "Unauthorized"
       _showSnack("Upload failed: $e");
     } finally {
       if (mounted) setState(() => _uploading = false);
@@ -237,11 +238,10 @@ class _CourseCardState extends State<_CourseCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Course Name: ${widget.name}", style: const TextStyle(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 6),
-          Text("Group: ${widget.group}", style: const TextStyle(color: Colors.black54)),
-          const SizedBox(height: 4),
-          Text("Weekly Schedule: ${widget.schedule}", style: const TextStyle(color: Colors.black54)),
+          Text(
+            "Course Name: ${widget.name}",
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 12),
 
           if (_uploading) const LinearProgressIndicator(minHeight: 3),
@@ -267,8 +267,11 @@ class _CourseCardState extends State<_CourseCard> {
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: purple),
                     foregroundColor: purple,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    padding:
+                    const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text("View Students"),
                 ),
@@ -292,8 +295,11 @@ class _CourseCardState extends State<_CourseCard> {
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: purple),
                     foregroundColor: purple,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    padding:
+                    const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text("View Files"),
                 ),
@@ -305,11 +311,15 @@ class _CourseCardState extends State<_CourseCard> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: purple,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    padding:
+                    const EdgeInsets.symmetric(vertical: 12),
                     elevation: 0,
                   ),
-                  child: Text(_uploading ? "Uploading..." : "Upload"),
+                  child:
+                  Text(_uploading ? "Uploading..." : "Upload"),
                 ),
               ),
             ],

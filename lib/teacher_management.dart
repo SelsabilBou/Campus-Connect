@@ -18,7 +18,7 @@ class _TeacherManagementState extends State<TeacherManagement> {
   String? errorMsg;
 
   int? selectedTeacherId;
-  String? selectedGroupId; // stocke l'id du groupe
+  String? selectedGroupId; // id du groupe (class_id)
 
   @override
   void initState() {
@@ -144,8 +144,9 @@ class _TeacherManagementState extends State<TeacherManagement> {
                   final id = int.parse(t['id'].toString());
                   final name = (t['name'] ?? '').toString();
                   final email = (t['email'] ?? '').toString();
-                  final groupTitle =
-                  (t['group_title'] ?? '-').toString();
+                  // 🔴 nouveau champ renvoyé par teachers_read.php
+                  final groupsTitles =
+                  (t['groups_titles'] ?? '-').toString();
 
                   final initials = name
                       .split(' ')
@@ -214,7 +215,7 @@ class _TeacherManagementState extends State<TeacherManagement> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Group: $groupTitle',
+                                  'Groups: $groupsTitles',
                                   style: const TextStyle(
                                     color: Colors.black45,
                                   ),
@@ -238,8 +239,8 @@ class _TeacherManagementState extends State<TeacherManagement> {
             const SizedBox(height: 12),
 
             Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),

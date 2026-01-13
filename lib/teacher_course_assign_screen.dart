@@ -49,7 +49,7 @@ class _TeacherCourseAssignScreenState
         const SnackBar(
           content: Text('Choisis un teacher et un cours'),
         ),
-      ); // [web:252]
+      );
       return;
     }
 
@@ -68,10 +68,16 @@ class _TeacherCourseAssignScreenState
           r.success ? "✅ ${r.message}" : "❌ ${r.message}",
         ),
       ),
-    ); // [web:255]
+    );
 
-    // Si tu veux recharger les données après assign (par ex. si tu affiches les cours quelque part)
-    // await loadData();
+    if (r.success) {
+      // on recharge pour que la liste des cours s’actualise
+      await loadData();
+      setState(() {
+        selectedTeacherId = null;
+        selectedCourseId = null;
+      });
+    }
   }
 
   @override
@@ -106,15 +112,21 @@ class _TeacherCourseAssignScreenState
             ],
 
             Expanded(
-              child: ListView.separated(
+              child: teachers.isEmpty
+                  ? const Center(child: Text('No teachers found'))
+                  : ListView.separated(
                 itemCount: teachers.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, __) =>
+                const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final t = teachers[index];
 
                   final id = int.parse(t['id'].toString());
                   final name = (t['name'] ?? '').toString();
                   final email = (t['email'] ?? '').toString();
+                  // 👇 texte concaténé envoyé par teachers_read.php
+                  final coursesTitles =
+                  (t['courses_titles'] ?? '-').toString();
 
                   final initials = name
                       .split(' ')
@@ -126,7 +138,8 @@ class _TeacherCourseAssignScreenState
                   final isSelected = selectedTeacherId == id;
 
                   return GestureDetector(
-                    onTap: () => setState(() => selectedTeacherId = id),
+                    onTap: () =>
+                        setState(() => selectedTeacherId = id),
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -140,7 +153,8 @@ class _TeacherCourseAssignScreenState
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color:
+                            Colors.black.withOpacity(0.06),
                             blurRadius: 18,
                             offset: const Offset(0, 10),
                           )
@@ -150,7 +164,8 @@ class _TeacherCourseAssignScreenState
                         children: [
                           CircleAvatar(
                             radius: 26,
-                            backgroundColor: const Color(0xFFEDE7FF),
+                            backgroundColor:
+                            const Color(0xFFEDE7FF),
                             child: Text(
                               initials.isEmpty ? "?" : initials,
                               style: const TextStyle(
@@ -161,7 +176,8 @@ class _TeacherCourseAssignScreenState
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                              crossAxisAlignment:
+                              CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   name,
@@ -175,6 +191,13 @@ class _TeacherCourseAssignScreenState
                                   email,
                                   style: const TextStyle(
                                     color: Colors.black54,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Courses: $coursesTitles',
+                                  style: const TextStyle(
+                                    color: Colors.black45,
                                   ),
                                 ),
                               ],
@@ -214,7 +237,7 @@ class _TeacherCourseAssignScreenState
                       }).toList(),
                       onChanged: (v) =>
                           setState(() => selectedCourseId = v),
-                    ), // [web:248]
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),

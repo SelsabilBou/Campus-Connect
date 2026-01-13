@@ -7,6 +7,7 @@ class AuthService {
   static const _userKey = 'logged_user';
   static const String baseUrl = 'http://10.0.2.2/compuse_app';
 
+  /// Login pour Student / Teacher / Admin
   static Future<bool> login(String email, String password, String role) async {
     try {
       final uri = Uri.parse('$baseUrl/login.php');
@@ -40,6 +41,7 @@ class AuthService {
     }
   }
 
+  /// Inscription étudiant
   static Future<bool> registerStudent(Map<String, String> data) async {
     try {
       final uri = Uri.parse('$baseUrl/register.php');
@@ -59,16 +61,19 @@ class AuthService {
     }
   }
 
+  /// Vérifier si quelqu’un est connecté
   static Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('is_logged_in') ?? false;
   }
 
+  /// Rôle courant (Student / Teacher / Admin)
   static Future<String?> getUserRole() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_role');
   }
 
+  /// Déconnexion
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('is_logged_in');
@@ -77,6 +82,7 @@ class AuthService {
     await prefs.remove(_userKey);
   }
 
+  /// Récupérer l’utilisateur courant
   static Future<UserModel?> getLoggedInUser() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonStr = prefs.getString(_userKey);
@@ -84,7 +90,9 @@ class AuthService {
     return UserModel.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
   }
 
-  // -------- Phase 5 helpers --------
+  // -------- Helpers Teacher --------
+
+  /// ID du teacher connecté (ou null si pas teacher)
   static Future<int?> getTeacherId() async {
     final u = await getLoggedInUser();
     if (u == null) return null;
@@ -92,10 +100,11 @@ class AuthService {
     return u.id;
   }
 
+  /// api_key du teacher connecté (ou null si pas teacher)
   static Future<String?> getTeacherApiKey() async {
     final u = await getLoggedInUser();
     if (u == null) return null;
     if (u.role.toLowerCase() != 'teacher') return null;
-    return u.apiKey;
+    return u.apiKey; // assure-toi que UserModel a bien apiKey
   }
 }
