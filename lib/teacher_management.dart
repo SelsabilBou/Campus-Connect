@@ -12,21 +12,19 @@ class _TeacherManagementState extends State<TeacherManagement> {
   final service = AdminService.instance;
 
   List<Map<String, dynamic>> teachers = [];
-  List<Map<String, dynamic>> groups = []; // [{id,title}] - pas utilisé maintenant
-  List<String> availableGroups = []; // 👈 NOUVEAU: Liste des noms de groupes
-
+  List<Map<String, dynamic>> groups = []; // [{id,title}]
   bool loading = false;
   bool loadingGroups = false;
   String? errorMsg;
 
   int? selectedTeacherId;
-  String? selectedGroupId;
+  String? selectedGroupId; // stocke l'id du groupe
 
   @override
   void initState() {
     super.initState();
     loadData();
-    loadAvailableGroups(); // 👈 NOUVEAU: Charge les groupes disponibles
+    loadGroups();
   }
 
   Future<void> loadData() async {
@@ -37,7 +35,6 @@ class _TeacherManagementState extends State<TeacherManagement> {
 
     try {
       teachers = await service.fetchTeachers();
-      groups = await service.fetchGroupsRaw(); // Garde pour compatibilité
     } catch (e) {
       errorMsg = "Erreur lors du chargement";
     }
@@ -45,32 +42,20 @@ class _TeacherManagementState extends State<TeacherManagement> {
     if (mounted) setState(() => loading = false);
   }
 
-  // 👇 NOUVELLE FONCTION: Charge les groupes distincts
-  Future<void> loadAvailableGroups() async {
+  Future<void> loadGroups() async {
     setState(() => loadingGroups = true);
 
     try {
-      final fetchedGroups = await service.fetchAvailableGroups();
+      final fetched = await service.fetchGroupsRaw();
       if (mounted) {
         setState(() {
-          availableGroups = fetchedGroups;
+          groups = fetched;
           loadingGroups = false;
         });
-        print('✅ Available groups loaded: $availableGroups');
       }
     } catch (e) {
-      print('❌ Error loading available groups: $e');
       if (mounted) {
-        setState(() {
-          // Fallback en cas d'erreur
-          availableGroups = [
-            'L2 - Group 1',
-            'L2 - Group 2',
-            'L3 - Group 1',
-            'L3 - Group 2',
-          ];
-          loadingGroups = false;
-        });
+        setState(() => loadingGroups = false);
       }
     }
   }
@@ -92,7 +77,6 @@ class _TeacherManagementState extends State<TeacherManagement> {
 
     if (!mounted) return;
 
-    // Notification (success/fail) avec message PHP
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(r.success ? "✅ ${r.message}" : "❌ ${r.message}"),
@@ -101,12 +85,11 @@ class _TeacherManagementState extends State<TeacherManagement> {
     );
 
     if (r.success) {
-      // Reset selections
       setState(() {
         selectedTeacherId = null;
         selectedGroupId = null;
       });
-      await loadData(); // refresh باش تبان group_title يتبدل
+      await loadData();
     }
   }
 
@@ -153,14 +136,16 @@ class _TeacherManagementState extends State<TeacherManagement> {
               )
                   : ListView.separated(
                 itemCount: teachers.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (_, __) =>
+                const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final t = teachers[index];
 
                   final id = int.parse(t['id'].toString());
                   final name = (t['name'] ?? '').toString();
                   final email = (t['email'] ?? '').toString();
-                  final groupTitle = (t['group_title'] ?? '-').toString();
+                  final groupTitle =
+                  (t['group_title'] ?? '-').toString();
 
                   final initials = name
                       .split(' ')
@@ -172,7 +157,8 @@ class _TeacherManagementState extends State<TeacherManagement> {
                   final isSelected = selectedTeacherId == id;
 
                   return GestureDetector(
-                    onTap: () => setState(() => selectedTeacherId = id),
+                    onTap: () =>
+                        setState(() => selectedTeacherId = id),
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
@@ -186,7 +172,8 @@ class _TeacherManagementState extends State<TeacherManagement> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
+                            color:
+                            Colors.black.withOpacity(0.06),
                             blurRadius: 18,
                             offset: const Offset(0, 10),
                           )
@@ -196,7 +183,8 @@ class _TeacherManagementState extends State<TeacherManagement> {
                         children: [
                           CircleAvatar(
                             radius: 26,
-                            backgroundColor: const Color(0xFFEDE7FF),
+                            backgroundColor:
+                            const Color(0xFFEDE7FF),
                             child: Text(
                               initials.isEmpty ? "?" : initials,
                               style: const TextStyle(
@@ -249,9 +237,9 @@ class _TeacherManagementState extends State<TeacherManagement> {
 
             const SizedBox(height: 12),
 
-            // 👇 DROPDOWN MODIFIÉ: Utilise availableGroups au lieu de groups
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -269,8 +257,10 @@ class _TeacherManagementState extends State<TeacherManagement> {
                     child: loadingGroups
                         ? const Center(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        padding:
+                        EdgeInsets.symmetric(vertical: 8),
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2),
                       ),
                     )
                         : DropdownButton<String>(
@@ -278,22 +268,32 @@ class _TeacherManagementState extends State<TeacherManagement> {
                       isExpanded: true,
                       underline: const SizedBox(),
                       hint: const Text('Select Group'),
-                      items: availableGroups.isEmpty
-                          ? [
-                        const DropdownMenuItem(
+                      items: groups.isEmpty
+                          ? const [
+                        DropdownMenuItem<String>(
                           value: null,
-                          child: Text('No groups available'),
+                          child:
+                          Text('No groups available'),
                         )
                       ]
-                          : availableGroups.map((groupName) {
+                          : groups.map((g) {
+                        final gid =
+                        g['id'].toString();
+                        final title = (g['title'] ?? '')
+                            .toString();
                         return DropdownMenuItem<String>(
-                          value: groupName,
-                          child: Text(groupName),
+                          value: gid,
+                          child: Text(
+                            title.isEmpty
+                                ? 'Group $gid'
+                                : title,
+                          ),
                         );
                       }).toList(),
-                      onChanged: availableGroups.isEmpty
+                      onChanged: groups.isEmpty
                           ? null
-                          : (v) => setState(() => selectedGroupId = v),
+                          : (v) =>
+                          setState(() => selectedGroupId = v),
                     ),
                   ),
                   const SizedBox(width: 10),

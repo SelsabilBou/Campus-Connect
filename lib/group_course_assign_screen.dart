@@ -88,7 +88,7 @@ class _GroupCourseAssignScreenState extends State<GroupCourseAssignScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          r.success ? "✅ ${r.message}" : "❌ ${r.message}",
+          r.success ? "${r.message}" : " ${r.message}",
         ),
       ),
     );
