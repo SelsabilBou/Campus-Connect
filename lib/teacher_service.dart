@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
+
 import 'auth_service.dart';
 import 'attendance_model.dart';
 import 'course_file_model.dart';
@@ -38,17 +40,12 @@ class TeacherService {
     };
   }
 
-  // ✅ CORRECTION: Utiliser teacher_courses_read.php avec authentification
+  // ---------------- COURSES ----------------
   Future<List<CourseModel>> fetchCourses() async {
-    final uri = Uri.parse("$baseUrl/teacher_courses_read.php");
-    final auth = await _teacherAuthBody();
-
-    // ✅ Envoyer en POST avec les credentials
-    final res = await http.post(
-      uri,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(auth),
-    ).timeout(_timeout);
+    final uri = Uri.parse("$baseUrl/courses_read.php");
+    final res = await http
+        .get(uri, headers: {"Accept": "application/json"})
+        .timeout(_timeout);
 
     if (res.statusCode != 200) {
       throw Exception("HTTP ${res.statusCode}: ${utf8.decode(res.bodyBytes)}");
@@ -59,8 +56,7 @@ class TeacherService {
       throw Exception(decoded["message"]?.toString() ?? "Fetch courses failed");
     }
 
-    // ✅ Chercher 'courses' au lieu de 'data'
-    final list = (decoded["courses"] ?? []) as List;
+    final list = (decoded["data"] ?? []) as List;
     return list.map((e) => CourseModel.fromJson(e)).toList();
   }
 
@@ -129,15 +125,17 @@ class TeacherService {
     );
   }
 
-  // lecture des fichiers d’un cours (course_files_read.php -> {success,data})
   Future<List<CourseFile>> fetchCourseFiles(int courseId) async {
-    final uri = Uri.parse(
-      "$baseUrl/course_files_read.php?course_id=$courseId",
-    );
+    final uri = Uri.parse("$baseUrl/course_files_read.php");
+    final auth = await _teacherAuthBody();
 
-    final res = await http
-        .get(uri, headers: {"Accept": "application/json"})
-        .timeout(_timeout);
+    final res = await http.post(
+      uri,
+      body: {
+        ...auth,
+        "course_id": courseId.toString(),
+      },
+    ).timeout(_timeout);
 
     if (res.statusCode != 200) {
       throw Exception("HTTP ${res.statusCode}: ${utf8.decode(res.bodyBytes)}");
@@ -152,6 +150,7 @@ class TeacherService {
     final list = (decoded["data"] ?? []) as List;
     return list.map((e) => CourseFile.fromJson(e)).toList();
   }
+
 
   // optionnel: à supprimer si tu n’utilises plus files_read.php
   Future<List<CourseFile>> getCourseFiles(int courseId) async {

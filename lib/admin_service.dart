@@ -270,50 +270,6 @@ class AdminService {
     }
   }
 
-  // 👇 NOUVELLE FONCTION: Récupère les noms de groupes distincts depuis students
-
-  Future<List<String>> fetchAvailableGroups() async {
-    try {
-      final url = Uri.parse('$baseUrl/groups_read.php');
-
-      final resp = await http.get(
-        url,
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      print('GROUPS STATUS=${resp.statusCode}');
-      print('GROUPS BODY=${resp.body}');
-
-      if (resp.statusCode == 200) {
-        final data = json.decode(resp.body);
-        if (data['success'] == true) {
-          final List<dynamic> groupsList = data['groups'] ?? [];
-          print('✅ Groups loaded: $groupsList');
-          return groupsList.map((g) => g.toString()).toList();
-        }
-      }
-
-      throw Exception('Failed to fetch groups');
-    } catch (e) {
-      print('❌ Error fetching groups: $e');
-      // NE PAS utiliser de fallback - retourne liste vide
-      return [];
-    }
-  }
-
-
-  // Groupes de secours si l'API échoue
-  List<String> _fallbackGroups() {
-    return [
-      'L2 - Group 1',
-      'L2 - Group 2',
-      'L3 - Group 1',
-      'L3 - Group 2',
-      'M1 - Group 1',
-      'M1 - Group 2',
-    ];
-  }
-
   // envoie un get bah tejib l courses
   Future<List<CourseModel>> fetchCourses() async {
     try {

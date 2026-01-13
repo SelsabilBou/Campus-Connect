@@ -33,13 +33,37 @@ class _GroupCourseAssignScreenState extends State<GroupCourseAssignScreen> {
     });
 
     try {
-      groups = await service.fetchGroupsRaw();
-      courses = await service.fetchCoursesRaw();
-    } catch (e) {
-      errorMsg = "Erreur lors du chargement";
-    }
+      final g = await service.fetchGroupsRaw();
+      final c = await service.fetchCoursesRaw();
 
-    if (mounted) setState(() => loading = false);
+      setState(() {
+        groups = g;
+        courses = c;
+
+        // Réinitialiser la sélection si les listes ont changé
+        if (groups.isEmpty) {
+          selectedGroupId = null;
+        } else if (selectedGroupId != null &&
+            !groups.any((e) => e['id'].toString() == selectedGroupId)) {
+          selectedGroupId = null;
+        }
+
+        if (courses.isEmpty) {
+          selectedCourseId = null;
+        } else if (selectedCourseId != null &&
+            !courses.any((e) => e['id'].toString() == selectedCourseId)) {
+          selectedCourseId = null;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        errorMsg = "Erreur lors du chargement";
+      });
+    } finally {
+      if (mounted) {
+        setState(() => loading = false);
+      }
+    }
   }
 
   Future<void> assignCourse() async {
@@ -72,14 +96,17 @@ class _GroupCourseAssignScreenState extends State<GroupCourseAssignScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool noGroups = groups.isEmpty;
+    final bool noCourses = courses.isEmpty;
+
     return Scaffold(
-      appBar:
-      AppBar(title: const Text('Assign course to group')),
+      appBar: AppBar(
+        title: const Text('Assign course to group'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment:
-          CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Assign course to group',
@@ -114,8 +141,7 @@ class _GroupCourseAssignScreenState extends State<GroupCourseAssignScreen> {
             ),
             const SizedBox(height: 6),
             Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: const Color(0xFFF3F3F6),
                 borderRadius: BorderRadius.circular(18),
@@ -124,17 +150,20 @@ class _GroupCourseAssignScreenState extends State<GroupCourseAssignScreen> {
                 value: selectedGroupId,
                 isExpanded: true,
                 underline: const SizedBox(),
-                hint: const Text('Select group'),
+                hint: Text(
+                  noGroups ? 'No groups found' : 'Select group',
+                ),
                 items: groups.map((g) {
                   final gid = g['id'].toString();
-                  final title = g['title'].toString();
-                  return DropdownMenuItem(
+                  final title = (g['title'] ?? '').toString();
+                  return DropdownMenuItem<String>(
                     value: gid,
-                    child: Text(title),
+                    child: Text(title.isEmpty ? 'Group $gid' : title),
                   );
                 }).toList(),
-                onChanged: (v) =>
-                    setState(() => selectedGroupId = v),
+                onChanged: noGroups
+                    ? null
+                    : (v) => setState(() => selectedGroupId = v),
               ),
             ),
 
@@ -145,8 +174,7 @@ class _GroupCourseAssignScreenState extends State<GroupCourseAssignScreen> {
             ),
             const SizedBox(height: 6),
             Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: const Color(0xFFF3F3F6),
                 borderRadius: BorderRadius.circular(18),
@@ -155,17 +183,20 @@ class _GroupCourseAssignScreenState extends State<GroupCourseAssignScreen> {
                 value: selectedCourseId,
                 isExpanded: true,
                 underline: const SizedBox(),
-                hint: const Text('Select course'),
+                hint: Text(
+                  noCourses ? 'No courses found' : 'Select course',
+                ),
                 items: courses.map((c) {
                   final cid = c['id'].toString();
-                  final title = c['title'].toString();
-                  return DropdownMenuItem(
+                  final title = (c['title'] ?? '').toString();
+                  return DropdownMenuItem<String>(
                     value: cid,
-                    child: Text(title),
+                    child: Text(title.isEmpty ? 'Course $cid' : title),
                   );
                 }).toList(),
-                onChanged: (v) =>
-                    setState(() => selectedCourseId = v),
+                onChanged: noCourses
+                    ? null
+                    : (v) => setState(() => selectedCourseId = v),
               ),
             ),
 
@@ -175,11 +206,9 @@ class _GroupCourseAssignScreenState extends State<GroupCourseAssignScreen> {
               height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                  const Color(0xFF6D28D9),
+                  backgroundColor: const Color(0xFF6D28D9),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                    BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(22),
                   ),
                 ),
                 onPressed: loading ? null : assignCourse,
