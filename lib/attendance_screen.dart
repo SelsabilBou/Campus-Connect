@@ -15,10 +15,10 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
   final service = TeacherService.instance;
 
-  List<CourseModel> _courses = [];
+  List<CourseModel> _courses = [];// Liste des cours du prof
   List<StudentModel> _students = [];
 
-  int? _selectedCourseId;
+  int? _selectedCourseId;// ID du cours choisi
   int week = 1;
 
   bool _loading = false;
@@ -41,29 +41,32 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   void _resetWeekDefaultsForStudents() {
     _present.clear();
     for (final s in _students) {
-      _present[s.id] = true; // default
+      _present[s.id] = true;
     }
   }
 
   Future<void> _init() async {
     if (!mounted) return;
-    setState(() => _loading = true);
+    setState(() => _loading = true);//afficher le loading
 
     try {
+      //recupere tous les cours du prof depuis le backend
       final courses = await service.fetchCourses();
       if (!mounted) return;
 
       setState(() => _courses = courses);
 
       if (_courses.isEmpty) {
-        _showSnack("No courses in database");
+        _showSnack("No courses ");
         return;
       }
-
+      //selectionne le premier cours par defaut
       final firstId = int.tryParse(_courses.first.id);
       if (firstId == null) throw Exception("Invalid course id");
 
       setState(() => _selectedCourseId = firstId);
+
+      //charge les etudiants de ce cours + leur presences
 
       await _loadCourseAndWeek(courseId: firstId, week: week);
     } catch (e) {
