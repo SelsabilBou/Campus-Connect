@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'student_service.dart';
 import 'auth_service.dart';
+
 class ScheduleView extends StatefulWidget {
   const ScheduleView({super.key});
 
@@ -13,24 +14,12 @@ class _ScheduleViewState extends State<ScheduleView> {
 
   bool _loading = true;
   String? _error;
-
-  // 🔍 NEW
-  final TextEditingController _searchCtrl = TextEditingController();
-  List<Map<String, String>> _allItems = [];
-  List<Map<String, String>> _filteredItems = [];
+  List<Map<String, String>> _scheduleItems = [];
 
   @override
   void initState() {
     super.initState();
     _load();
-    _searchCtrl.addListener(_onSearchChanged);
-  }
-
-  @override
-  void dispose() {
-    _searchCtrl.removeListener(_onSearchChanged);
-    _searchCtrl.dispose();
-    super.dispose();
   }
 
   Future<void> _load() async {
@@ -41,22 +30,31 @@ class _ScheduleViewState extends State<ScheduleView> {
 
     try {
       final user = await AuthService.getLoggedInUser();
+
       if (user == null || user.grp.isEmpty) {
         if (!mounted) return;
         setState(() {
-          _allItems = [];
-          _filteredItems = [];
+          _scheduleItems = [];
           _error = null;
+          _loading = false;
+        });
+        return;
+      }
+
+      // Check if student is approved
+      if (user.status?.toLowerCase() == 'pending') {
+        if (!mounted) return;
+        setState(() {
+          _scheduleItems = [];
+          _error = null;
+          _loading = false;
         });
         return;
       }
 
       final data = await _service.viewSchedule(user.grp);
       if (!mounted) return;
-      setState(() {
-        _allItems = data;
-        _applyFilter(); // initialise la liste filtrée
-      });
+      setState(() => _scheduleItems = data);
     } catch (e) {
       if (!mounted) return;
       setState(() => _error = 'Failed to load schedule: $e');
@@ -65,41 +63,34 @@ class _ScheduleViewState extends State<ScheduleView> {
     }
   }
 
-  void _onSearchChanged() {
-    _applyFilter();
-  }
-
-  void _applyFilter() {
-    final q = _searchCtrl.text.trim().toLowerCase();
-    if (q.isEmpty) {
-      _filteredItems = List<Map<String, String>>.from(_allItems);
-    } else {
-      _filteredItems = _allItems.where((row) {
-        final day = (row['day'] ?? '').toLowerCase();
-        final course = (row['course'] ?? '').toLowerCase();
-        final time = (row['time'] ?? '').toLowerCase();
-        return day.contains(q) || course.contains(q) || time.contains(q);
-      }).toList();
-    }
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    const purple = Color(0xFF6A3DE8);
+    const lightPurple = Color(0xFFF3F0FF);
+
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
+
     if (_error != null) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(_error!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 8),
+            const Icon(Icons.error_outline, size: 60, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _load,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: purple,
+                foregroundColor: Colors.white,
+              ),
               child: const Text('Retry'),
             ),
           ],
@@ -107,47 +98,200 @@ class _ScheduleViewState extends State<ScheduleView> {
       );
     }
 
-    if (_allItems.isEmpty) {
-      return const Center(child: Text('No schedule available yet.'));
-    }
-
-    return Column(
-      children: [
-        // 🔍 Barre de recherche
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: TextField(
-            controller: _searchCtrl,
-            decoration: InputDecoration(
-              hintText: 'Search by day, course, or time...',
-              prefixIcon: const Icon(Icons.search),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22),
+    if (_scheduleItems.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.calendar_today_outlined, size: 80, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No schedule available yet',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
+            const SizedBox(height: 8),
+            Text(
+              'Your group schedule will appear here',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Expanded(
-          child: _filteredItems.isEmpty
-              ? const Center(child: Text('No schedule matches your search.'))
-              : ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: _filteredItems.length,
-            itemBuilder: (context, i) {
-              final row = _filteredItems[i];
-              return Card(
-                child: ListTile(
-                  leading: const Icon(Icons.schedule),
-                  title: Text('${row['day']} - ${row['course']}'),
-                  subtitle: Text(row['time'] ?? ''),
+      );
+    }
+
+    // Group schedules by day
+    final groupedByDay = <String, List<Map<String, String>>>{};
+    for (final item in _scheduleItems) {
+      final day = item['day'] ?? 'Unknown';
+      groupedByDay.putIfAbsent(day, () => []);
+      groupedByDay[day]!.add(item);
+    }
+
+    final days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    final sortedDays = groupedByDay.keys.toList()
+      ..sort((a, b) {
+        final aIndex = days.indexOf(a);
+        final bIndex = days.indexOf(b);
+        if (aIndex == -1) return 1;
+        if (bIndex == -1) return -1;
+        return aIndex.compareTo(bIndex);
+      });
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: sortedDays.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final day = sortedDays[index];
+        final courses = groupedByDay[day]!;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Day header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: lightPurple,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(18),
+                    topRight: Radius.circular(18),
+                  ),
                 ),
-              );
-            },
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: purple,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_today,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      day,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: purple,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Courses for this day
+              ...courses.map((course) {
+                final courseName = course['course'] ?? 'Unknown Course';
+                final time = course['time'] ?? 'Time TBA';
+                final room = course['room'] ?? '';
+
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        color: Colors.grey[200]!,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: purple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(
+                          Icons.schedule,
+                          color: purple,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              courseName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 14,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  time,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                if (room.isNotEmpty) ...[
+                                  const SizedBox(width: 12),
+                                  Icon(
+                                    Icons.room,
+                                    size: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    room,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

@@ -5,8 +5,9 @@ import 'auth_screen.dart';
 import 'home_screen.dart';
 import 'admin.dart';
 import 'register_screen.dart';
-import 'welcome_screen.dart'; // <— importe ta page welcome
+import 'welcome_screen.dart';
 import 'teacher_dashboard.dart';
+
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
 
@@ -27,12 +28,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // première page = WelcomeScreen
       initialRoute: '/welcome',
       routes: {
         '/welcome': (_) => const WelcomeScreen(),
         '/login': (_) => const AuthScreen(),
-        '/student': (context) => const StudentPortalScreen(),
+        '/student': (_) => const StudentPortalScreen(),
         '/register': (_) => const RegisterScreen(),
         '/home': (_) => const HomeScreen(),
         '/admin': (_) => const AdminPanel(),

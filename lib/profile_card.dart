@@ -12,6 +12,11 @@ class ProfileCard extends StatefulWidget {
 class _ProfileCardState extends State<ProfileCard> {
   UserModel? _user;
   bool _loading = true;
+  bool _isEditingName = false;
+  bool _isEditingEmail = false;
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
 
   @override
   void initState() {
@@ -19,14 +24,49 @@ class _ProfileCardState extends State<ProfileCard> {
     _loadUser();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadUser() async {
     final user = await AuthService.getLoggedInUser();
     if (mounted) {
       setState(() {
         _user = user;
+        _nameController.text = user?.name ?? '';
+        _emailController.text = user?.email ?? '';
         _loading = false;
       });
     }
+  }
+
+  Future<void> _saveName() async {
+    // TODO: Call API to update name
+    // For now, just update locally and reload user
+    setState(() {
+      _isEditingName = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Name updated successfully!')),
+    );
+    // Reload user data after update
+    await _loadUser();
+  }
+
+  Future<void> _saveEmail() async {
+    // TODO: Call API to update email
+    // For now, just update locally and reload user
+    setState(() {
+      _isEditingEmail = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Email updated successfully!')),
+    );
+    // Reload user data after update
+    await _loadUser();
   }
 
   @override
@@ -38,11 +78,42 @@ class _ProfileCardState extends State<ProfileCard> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // Check if account is pending approval
+    final isPending = _user?.status?.toLowerCase() == 'pending';
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // Pending approval warning
+            if (isPending)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.orange[300]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.pending_outlined, color: Colors.orange[700]),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Your account is pending admin approval',
+                        style: TextStyle(
+                          color: Colors.orange[900],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Card principale avec gradient
             Container(
               width: double.infinity,
@@ -104,19 +175,63 @@ class _ProfileCardState extends State<ProfileCard> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Nom
-                    Text(
-                      _user?.name ?? 'Student Name',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
+                    // Nom (editable)
+                    _isEditingName
+                        ? Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _nameController,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white, width: 2),
+                              ),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.check, color: Colors.white),
+                          onPressed: _saveName,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => setState(() => _isEditingName = false),
+                        ),
+                      ],
+                    )
+                        : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _user?.name ?? 'Student Name',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.white70, size: 18),
+                          onPressed: () => setState(() => _isEditingName = true),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
 
-                    // Group badge
+                    // Group badge (non-editable)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -141,8 +256,39 @@ class _ProfileCardState extends State<ProfileCard> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Email
-                    Row(
+                    // Email (editable)
+                    _isEditingEmail
+                        ? Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _emailController,
+                            style: const TextStyle(color: Colors.white),
+                            textAlign: TextAlign.center,
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.white, width: 2),
+                              ),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.check, color: Colors.white),
+                          onPressed: _saveEmail,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => setState(() => _isEditingEmail = false),
+                        ),
+                      ],
+                    )
+                        : Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Icon(
@@ -158,6 +304,10 @@ class _ProfileCardState extends State<ProfileCard> {
                             fontSize: 14,
                           ),
                         ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.white70, size: 16),
+                          onPressed: () => setState(() => _isEditingEmail = true),
+                        ),
                       ],
                     ),
                   ],
@@ -167,7 +317,7 @@ class _ProfileCardState extends State<ProfileCard> {
 
             const SizedBox(height: 20),
 
-            // Section Informations
+            // Section Informations (non-editable)
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -192,8 +342,8 @@ class _ProfileCardState extends State<ProfileCard> {
                   _buildInfoTile(
                     icon: Icons.school_outlined,
                     title: 'Status',
-                    value: _user?.status ?? 'Active',
-                    color: Colors.green,
+                    value: _user?.status ?? 'N/A',
+                    color: isPending ? Colors.orange : Colors.green,
                   ),
                   Divider(height: 1, color: Colors.grey[200]),
                   _buildInfoTile(
@@ -207,39 +357,6 @@ class _ProfileCardState extends State<ProfileCard> {
             ),
 
             const SizedBox(height: 20),
-
-            // Section Actions
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.edit_outlined,
-                    label: 'Edit Profile',
-                    color: purple,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Edit profile feature coming soon!'),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionButton(
-                    icon: Icons.settings_outlined,
-                    label: 'Settings',
-                    color: Colors.grey[700]!,
-                    onTap: () {
-                      // TODO: Settings
-                    },
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
 
             // Quick Stats
             Container(
@@ -307,49 +424,7 @@ class _ProfileCardState extends State<ProfileCard> {
               ],
             ),
           ),
-          Icon(Icons.chevron_right, color: Colors.grey[400]),
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

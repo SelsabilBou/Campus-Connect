@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'schedule_view.dart';
 import 'marks_view.dart';
-import 'student_service.dart';
-import 'file_model.dart';
 import 'auth_service.dart';
-import 'user_model.dart';
 import 'profile_card.dart';
 
 class StudentPortalScreen extends StatefulWidget {
@@ -69,7 +66,7 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'View profile, schedule, marks, and files',
+                'View profile, schedule, and marks',
                 style: TextStyle(fontSize: 18, color: Colors.white70),
               ),
               const SizedBox(height: 22),
@@ -95,10 +92,9 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
                         child: IndexedStack(
                           index: _selectedTab,
                           children: const [
-                            ProfileCard(), // ✅ Utilise ProfileCard
+                            ProfileCard(),
                             ScheduleView(),
                             MarksView(),
-                            _FilesDummyView(),
                           ],
                         ),
                       ),
@@ -159,14 +155,6 @@ class _TabsPill extends StatelessWidget {
                   icon: Icons.grade,
                   selected: selectedIndex == 2,
                   onTap: () => onChanged(2),
-                ),
-              ),
-              Expanded(
-                child: _TabItem(
-                  label: 'Files',
-                  icon: Icons.folder,
-                  selected: selectedIndex == 3,
-                  onTap: () => onChanged(3),
                 ),
               ),
             ],
@@ -238,229 +226,6 @@ class _TabItem extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ---------- Files avec Search ----------
-class _FilesDummyView extends StatefulWidget {
-  const _FilesDummyView();
-
-  @override
-  State<_FilesDummyView> createState() => _FilesDummyViewState();
-}
-
-class _FilesDummyViewState extends State<_FilesDummyView> {
-  final _service = StudentService.instance;
-
-  bool _loading = true;
-  String? _error;
-
-  final TextEditingController _searchCtrl = TextEditingController();
-  final ScrollController _scrollCtrl = ScrollController();
-
-  final List<FileModel> _allFiles = [];
-  List<FileModel> _filteredFiles = [];
-
-  int _page = 1;
-  final int _limit = 20;
-  bool _hasMore = true;
-  bool _isLoadingMore = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchCtrl.addListener(_onSearchChanged);
-    _scrollCtrl.addListener(_onScroll);
-    _load(firstPage: true);
-  }
-
-  @override
-  void dispose() {
-    _scrollCtrl.removeListener(_onScroll);
-    _scrollCtrl.dispose();
-    _searchCtrl.removeListener(_onSearchChanged);
-    _searchCtrl.dispose();
-    super.dispose();
-  }
-
-  Future<void> _load({required bool firstPage}) async {
-    if (firstPage) {
-      setState(() {
-        _loading = true;
-        _error = null;
-        _allFiles.clear();
-        _filteredFiles.clear();
-        _page = 1;
-        _hasMore = true;
-      });
-    }
-
-    try {
-      final user = await AuthService.getLoggedInUser();
-      final groupKey = user?.grp ?? '';
-
-      if (groupKey.isEmpty) {
-        if (!mounted) return;
-        setState(() {
-          _allFiles.clear();
-          _filteredFiles.clear();
-          _error = null;
-          _loading = false;
-          _hasMore = false;
-        });
-        return;
-      }
-
-      final result = await _service.viewFilesPaged(groupKey, _page, _limit);
-
-      if (!mounted) return;
-
-      setState(() {
-        _allFiles.addAll(result.files);
-        _hasMore = result.hasMore;
-        _page++;
-        _applyFilter();
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = 'Failed to load files: $e');
-    } finally {
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _isLoadingMore = false;
-      });
-    }
-  }
-
-  void _onScroll() {
-    if (!_hasMore || _isLoadingMore || _loading) return;
-    if (_scrollCtrl.position.pixels >=
-        _scrollCtrl.position.maxScrollExtent - 200) {
-      _isLoadingMore = true;
-      _load(firstPage: false);
-    }
-  }
-
-  void _onSearchChanged() {
-    _applyFilter();
-  }
-
-  void _applyFilter() {
-    final query = _searchCtrl.text.trim().toLowerCase();
-    List<FileModel> base = List<FileModel>.from(_allFiles);
-
-    if (query.isNotEmpty) {
-      base = base.where((f) {
-        final name = f.name.toLowerCase();
-        final tag = f.tag.toLowerCase();
-        return name.contains(query) || tag.contains(query);
-      }).toList();
-    }
-
-    _filteredFiles = base;
-    if (mounted) setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_loading && _allFiles.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_error != null && _allFiles.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_error!, style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              onPressed: () => _load(firstPage: true),
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          child: TextField(
-            controller: _searchCtrl,
-            decoration: InputDecoration(
-              hintText: 'Search by name or tag...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Expanded(
-          child: _allFiles.isEmpty
-              ? const Center(child: Text('No files available yet.'))
-              : (_filteredFiles.isEmpty
-              ? const Center(
-            child: Text('No files match your search.'),
-          )
-              : ListView.separated(
-            controller: _scrollCtrl,
-            padding: const EdgeInsets.all(16),
-            itemCount: _filteredFiles.length + (_hasMore ? 1 : 0),
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-            itemBuilder: (context, index) {
-              if (index == _filteredFiles.length && _hasMore) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                );
-              }
-              final f = _filteredFiles[index];
-              return Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 18,
-                      offset: const Offset(0, 10),
-                    )
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.insert_drive_file,
-                        color: Colors.black45),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        f.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      f.tag,
-                      style: const TextStyle(color: Colors.black54),
-                    ),
-                  ],
-                ),
-              );
-            },
-          )),
-        ),
-      ],
     );
   }
 }
