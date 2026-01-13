@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'course_list.dart';
 import 'marks_screen.dart';
 import 'attendance_screen.dart';
-import 'auth_service.dart'; // ✅ NEW
+import 'auth_service.dart';
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
 
-  // global messenger ثابت
+  // Global messenger pour afficher des SnackBars partout
   static final GlobalKey<ScaffoldMessengerState> messengerKey =
   GlobalKey<ScaffoldMessengerState>();
 
@@ -19,16 +19,24 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   int selectedTab = 0;
 
   late final List<Widget> _tabs = const [
-    KeyedSubtree(key: PageStorageKey("tab_courses"), child: CourseListScreen()),
     KeyedSubtree(
-        key: PageStorageKey("tab_attendance"), child: AttendanceScreen()),
-    KeyedSubtree(key: PageStorageKey("tab_marks"), child: MarksScreen()),
+      key: PageStorageKey("tab_courses"),
+      child: CourseListScreen(),
+    ),
+    KeyedSubtree(
+      key: PageStorageKey("tab_attendance"),
+      child: AttendanceScreen(),
+    ),
+    KeyedSubtree(
+      key: PageStorageKey("tab_marks"),
+      child: MarksScreen(),
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-      key: TeacherDashboard.messengerKey, // IMPORTANT
+      key: TeacherDashboard.messengerKey,
       child: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
@@ -42,7 +50,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ================== LOGOUT BUTTON (NEW) ==================
+                // ====== Logout ======
                 Padding(
                   padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -71,35 +79,29 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                     ],
                   ),
                 ),
-                // =========================================================
 
                 const SizedBox(height: 24),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 22),
                   child: Text(
-                    'Teacher Panel',
+                    'Teacher Dashboard',
                     style: TextStyle(
-                      fontSize: 44,
+                      fontSize: 40,
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                       height: 1.0,
                     ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 22),
-                  child: Text(
-                    'Manage courses, attendance, and marks',
-                    style: TextStyle(fontSize: 18, color: Colors.white70),
-                  ),
-                ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 30),
+
                 Expanded(
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 18, vertical: 18),
+                      horizontal: 18,
+                      vertical: 18,
+                    ),
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.only(
@@ -111,7 +113,8 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                       children: [
                         _TabsPill(
                           selectedIndex: selectedTab,
-                          onChanged: (i) => setState(() => selectedTab = i),
+                          onChanged: (i) =>
+                              setState(() => selectedTab = i),
                         ),
                         const SizedBox(height: 16),
                         Expanded(
@@ -133,7 +136,6 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   }
 }
 
-// TabsPill و TabItem خليهم كيفما راهم عندك
 class _TabsPill extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onChanged;
@@ -226,7 +228,11 @@ class _TabItem extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: selected ? purple : Colors.black54),
+            Icon(
+              icon,
+              size: 18,
+              color: selected ? purple : Colors.black54,
+            ),
             const SizedBox(width: 8),
             Text(
               label,

@@ -282,6 +282,22 @@ class AdminService {
     }
   }
 
+  // 🔴 cours d'un seul teacher (pour le Teacher Panel)
+  Future<List<Map<String, dynamic>>> fetchTeacherCourses(
+      int teacherId) async {
+    try {
+      final uri =
+      _u('teacher_courses_read.php').replace(queryParameters: {
+        'teacherId': teacherId.toString(),
+      });
+      final res = await http.get(uri).timeout(_timeout);
+      if (res.statusCode != 200) return [];
+      return _decodeList(res.body);
+    } catch (_) {
+      return [];
+    }
+  }
+
   // ---------- Files ----------
 
   Future<ApiResult> uploadFile({
