@@ -35,7 +35,7 @@ class _CourseStudentsScreenState extends State<CourseStudentsScreen> {
   // Scroll
   final ScrollController _scrollCtrl = ScrollController();
 
-  // ---- SEARCH (Phase 4 kept) ----
+  // SEARCH
   final TextEditingController _searchCtrl = TextEditingController();
   Timer? _debounce;
   String _query = "";
@@ -84,7 +84,6 @@ class _CourseStudentsScreenState extends State<CourseStudentsScreen> {
     if (!_hasMore || _loadingFirst || _loadingMore) return;
     if (!_scrollCtrl.hasClients) return;
 
-    // trigger before reaching bottom
     const threshold = 200.0;
     final max = _scrollCtrl.position.maxScrollExtent;
     final cur = _scrollCtrl.position.pixels;
@@ -185,11 +184,14 @@ class _CourseStudentsScreenState extends State<CourseStudentsScreen> {
                 ),
                 filled: true,
                 fillColor: const Color(0xFFF7F5FF),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(999)),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 12),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(999)),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(999),
-                  borderSide: const BorderSide(color: Color(0xFFE6DEFF)),
+                  borderSide:
+                  const BorderSide(color: Color(0xFFE6DEFF)),
                 ),
               ),
             ),
@@ -200,14 +202,18 @@ class _CourseStudentsScreenState extends State<CourseStudentsScreen> {
                 ? const Center(child: Text("No students"))
                 : ListView.separated(
               controller: _scrollCtrl,
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              itemCount: list.length + (_loadingMore ? 1 : 0),
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              padding:
+              const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              itemCount:
+              list.length + (_loadingMore ? 1 : 0),
+              separatorBuilder: (_, __) =>
+              const SizedBox(height: 10),
               itemBuilder: (_, i) {
                 if (_loadingMore && i == list.length) {
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 10),
-                    child: Center(child: CircularProgressIndicator()),
+                    child: Center(
+                        child: CircularProgressIndicator()),
                   );
                 }
                 final s = list[i];
