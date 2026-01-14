@@ -57,7 +57,7 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'Student Panel',
+                'Student Dashboard',
                 style: TextStyle(
                   fontSize: 44,
                   fontWeight: FontWeight.w800,
@@ -66,7 +66,7 @@ class _StudentPortalScreenState extends State<StudentPortalScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'View profile, schedule, and marks',
+                '',
                 style: TextStyle(fontSize: 18, color: Colors.white70),
               ),
               const SizedBox(height: 22),

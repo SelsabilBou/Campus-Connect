@@ -97,7 +97,7 @@ class _AdminPanelState extends State<AdminPanel> {
               ),
               const SizedBox(height: 10),
               const Text(
-                'Admin',
+                'Admin Dashboard',
                 style: TextStyle(
                   fontSize: 44,
                   fontWeight: FontWeight.w800,
