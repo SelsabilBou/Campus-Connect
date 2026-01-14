@@ -4,7 +4,7 @@ import 'student_management.dart';        // Requests (pending students)
 import 'student_all_screen.dart';       // All students + delete
 import 'teacher_management.dart';
 import 'file_upload.dart';
-import 'schedule_calender.dart';
+// import 'schedule_calender.dart';    // ⛔ plus utilisé
 import 'auth_service.dart';
 import 'admin_service.dart';
 import 'teacher_course_assign_screen.dart';
@@ -444,41 +444,7 @@ class _FilesTabState extends State<_FilesTab> {
           ),
         ),
         const SizedBox(height: 10),
-        InkWell(
-          borderRadius: BorderRadius.circular(28),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                const ScheduleCalendarPage(),
-              ),
-            );
-          },
-          child: Container(
-            width: double.infinity,
-            height: 56,
-            decoration: BoxDecoration(
-              color: Colors.black87,
-              borderRadius: BorderRadius.circular(28),
-            ),
-            child: const Center(
-              child: Text(
-                'Calendar',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Files + Calendar',
-          style: TextStyle(color: Colors.black45),
-        ),
+
       ],
     );
   }
